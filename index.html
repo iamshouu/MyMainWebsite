@@ -1,0 +1,122 @@
+
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>DanyaShou | trade</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@400;600;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              brand: {
+                DEFAULT: '#ffffff',
+                glow: 'rgba(255, 255, 255, 0.4)',
+              },
+            },
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+              mono: ['Fira Code', 'monospace'],
+            },
+            animation: {
+              'fade-in-up': 'fadeInUp 1s ease-out forwards',
+              'text-reveal': 'textReveal 1.5s cubic-bezier(0.77, 0, 0.175, 1) forwards',
+              'scan': 'scan 3s linear infinite',
+            },
+            keyframes: {
+              fadeInUp: {
+                '0%': { opacity: '0', transform: 'translateY(40px)' },
+                '100%': { opacity: '1', transform: 'translateY(0)' },
+              },
+              scan: {
+                '0%': { transform: 'translateY(-100%)' },
+                '100%': { transform: 'translateY(200%)' },
+              }
+            }
+          },
+        },
+      }
+    </script>
+    <style>
+      ::-webkit-scrollbar { display: none; }
+      body {
+        background-color: #000;
+        color: #fff;
+        overflow: hidden;
+        -webkit-font-smoothing: antialiased;
+        touch-action: manipulation;
+      }
+      * { cursor: none !important; }
+      @media (hover: none) { 
+        * { cursor: auto !important; } 
+      }
+      
+      .outline-text {
+        -webkit-text-stroke: 1px rgba(255, 255, 255, 0.4);
+        color: transparent;
+        transition: all 0.5s ease;
+      }
+      
+      @media (min-width: 768px) {
+        .outline-text:hover {
+          -webkit-text-stroke: 1px rgba(255, 255, 255, 1);
+          text-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+        }
+      }
+
+      .logo-container::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
+        animation: scan 4s linear infinite;
+      }
+
+      /* Section Transition Logic */
+      .section-transition {
+        opacity: 0;
+        transform: translateY(60px) scale(0.95);
+        transition: all 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+        will-change: transform, opacity;
+      }
+
+      @media (min-width: 768px) {
+        .section-transition {
+          transform: translateY(100px) scale(0.9) rotateX(10deg);
+          transition: all 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+      }
+
+      .section-active {
+        opacity: 1;
+        transform: translateY(0) scale(1) rotateX(0deg);
+      }
+
+      .scroll-container {
+        perspective: 1000px;
+        height: 100dvh;
+        overflow-y: scroll;
+        scroll-snap-type: y mandatory;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      @media (min-width: 768px) {
+        .scroll-container {
+          perspective: 1500px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>
