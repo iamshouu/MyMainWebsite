@@ -126,7 +126,7 @@ export const CERTIFICATES_DATA = [
 
 export const TRADING_DETAILED_STATS = [
   { label: 'Total Trades', value: '26', type: 'neutral' },
-  { label: 'Win Rate', value: '45.8%', type: 'winrate' },
+  { label: 'Win Rate', value: '61.3%', type: 'winrate' },
   { label: 'Average RR', value: '1:2.10', type: 'neutral' },
   { label: 'Profit Factor', value: '1.78', type: 'neutral' },
   { label: 'Max Drawdown', value: '-8.3%', type: 'negative' },

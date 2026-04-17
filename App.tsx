@@ -770,15 +770,15 @@ const App: React.FC = () => {
                       const winRate = parseFloat(stat.value);
                       valueColor = winRate >= 50 ? 'text-white' : 'text-white/60'; // Defaulting to white/60 if red is not specified, but user said red if < 50
                       // Actually, let's follow the user's color request exactly
-                      valueColor = winRate >= 50 ? 'text-[#ffffff]' : 'text-[#ff4444]'; 
+                      valueColor = winRate >= 50 ? 'text-[#ffffff]' : 'text-[#facc15]'; 
                       // Wait, user said "зелёный цвет если >50%, красный если <50%"
                       // But the design is mostly white/black. Let's use a subtle green/red or just follow the prompt.
                       // Prompt: "зелёный цвет если >50%, красный если <50%"
-                      valueColor = winRate >= 50 ? 'text-[#4ade80]' : 'text-[#f87171]';
+                      valueColor = winRate >= 50 ? 'text-[#4ade80]' : 'text-[#facc15]';
                     } else if (stat.type === 'positive') {
                       valueColor = 'text-[#4ade80]';
                     } else if (stat.type === 'negative') {
-                      valueColor = 'text-[#f87171]';
+                      valueColor = 'text-[#facc15]';
                     }
 
                     return (
