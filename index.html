@@ -7,7 +7,7 @@
     <title>DanyaShou | trade</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@400;600;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@400;600;900&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
@@ -113,10 +113,13 @@
           perspective: 1500px;
         }
       }
+
     </style>
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
+    <!-- После инжекта Tailwind: иначе утилиты/ preflight перекрывают стили из бандла -->
+    <link rel="stylesheet" href="/experience-video.css" />
   </body>
 </html>

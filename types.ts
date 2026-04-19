@@ -17,6 +17,8 @@ export interface StatItem {
   label: string;
   value: string;
   description: string;
+  /** Optional layout for the main stat line (e.g. multi-segment markets row) */
+  variant?: 'default' | 'markets';
 }
 
 export interface SkillData {

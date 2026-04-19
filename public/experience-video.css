@@ -1,0 +1,58 @@
+/* Experience: телефон в правой колонке (как макет с радаром), по центру ячейки */
+
+.experience-section-video-wrap {
+  overflow: visible !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  padding-top: min(4vh, 32px) !important;
+  padding-bottom: min(4vh, 32px) !important;
+  background: transparent !important;
+}
+
+.experience-section-video {
+  display: block !important;
+  box-sizing: border-box !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  width: auto !important;
+  max-width: 100% !important;
+  height: min(64vh, 680px) !important;
+  max-height: min(64vh, 680px) !important;
+  object-fit: contain !important;
+  border-radius: 0 !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+@media (min-width: 640px) {
+  .experience-section-video {
+    height: min(62vh, 720px) !important;
+    max-height: min(62vh, 720px) !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  .experience-section-video-wrap {
+    justify-content: center !important;
+    align-items: center !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    min-height: min(82vh, 960px) !important;
+    /* Доля ряда рядом с блоком Telegram — телефон не сжимается узкой колонкой */
+    flex: 1 1 58% !important;
+    min-width: 58% !important;
+  }
+
+  .experience-section-video {
+    height: min(76vh, 820px) !important;
+    max-height: min(76vh, 820px) !important;
+    max-width: min(100%, 620px) !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+}

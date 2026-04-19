@@ -2,7 +2,7 @@ import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 
 // https://vitejs.dev/config/
-export default defineConfig(({ mode }) => {
+export default defineConfig(({ mode, command }) => {
   // Load env file based on `mode` in the current working directory.
   // Set the third parameter to '' to load all env regardless of the `VITE_` prefix.
   const env = loadEnv(mode, (process as any).cwd(), '');
@@ -11,11 +11,18 @@ export default defineConfig(({ mode }) => {
   const apiKey = env.VITE_API_KEY || env.API_KEY || '';
 
   return {
-    base: './',
+    // В dev нужен base "/" — иначе WebSocket (HMR) часто рвётся, страница «отваливается».
+    // Относительный "./" оставляем только для production (GitHub Pages / открытие из dist).
+    base: command === 'build' ? './' : '/',
     plugins: [react()],
     define: {
       // We inject the found key into the app so it's accessible via process.env.API_KEY
       'process.env.API_KEY': JSON.stringify(apiKey),
+    },
+    server: {
+      port: 5173,
+      // Если порт занят, Vite возьмёт следующий (5174, …) — смотри URL в терминале, не закрепляйся на 5173.
+      strictPort: false,
     },
   }
 })
