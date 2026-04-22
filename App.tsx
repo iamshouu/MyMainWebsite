@@ -8,7 +8,6 @@ import {
   PERFORMANCE_DATA,
   MONTHLY_PERFORMANCE_DATA,
   TRADING_DETAILED_STATS,
-  CERTIFICATES_DATA,
   EXPERIENCE_VIDEO,
 } from './constants';
 import type { UiLocale } from './constants';
@@ -122,7 +121,7 @@ const MENTORSHIP_COPY: Record<
     title: 'Менторство',
     heroSub: 'Занятия 1 на 1 и адаптация к вашему уровню знаний',
     heroBody:
-      'Менторшип представляет собой возможность обучиться трейдингу наиболее эффективно и безопасно для своего капитала, вы получите сопровождение на всём вашем пути от начала до вашего первого результата, качественную структуру обучения, индивидуальный подход.',
+      'Менторшип — это не групповой курс, где ты теряешься среди десятков студентов. Здесь ты в приоритете: каждое занятие, каждый разбор, каждая обратная связь — только про тебя. Ты получишь сопровождение на всём пути от нулевых знаний до первого стабильного результата, индивидуальную программу под твой уровень.',
     asideTitle: 'Кратко',
     asideLines: [
       'Диалоги один на один, не записанные лекции',
@@ -850,77 +849,46 @@ const App: React.FC = () => {
                   <h3 className="text-xl md:text-2xl font-black tracking-tight text-white">{mentorshipT.sectionTitle}</h3>
                 </div>
 
-                <div className="relative rounded-3xl border border-white/[0.07] bg-gradient-to-br from-white/[0.04] via-transparent to-white/[0.02] p-6 md:p-10 lg:p-12">
+                <div className="relative p-0">
                   <div
-                    className="pointer-events-none absolute inset-0 rounded-3xl bg-[radial-gradient(ellipse_80%_50%_at_15%_20%,rgba(255,255,255,0.06),transparent)]"
+                    className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_15%_20%,rgba(255,255,255,0.06),transparent)]"
                     aria-hidden
                   />
-                  {/* Ось пути */}
-                  <div
-                    className="pointer-events-none absolute left-6 top-10 bottom-10 hidden w-[2px] -translate-x-1/2 rounded-full bg-gradient-to-b from-cyan-400/45 via-white/18 to-indigo-500/35 md:left-7 md:block"
-                    aria-hidden
-                  />
-                  <ul className="relative space-y-10 md:space-y-12">
+                  <ul className="relative grid grid-cols-1 gap-0 overflow-hidden rounded-2xl md:grid-cols-2">
                     {MENTORSHIP_FEATURE_ICONS.map((item, idx) => {
                       const { title, desc } = mentorshipT.features[idx];
                       const step = item.step;
                       return (
-                        <li key={step} className="relative flex gap-5 md:gap-8 lg:gap-10">
-                          <div className="relative z-10 flex w-12 shrink-0 flex-col items-center md:w-14">
+                        <li
+                          key={step}
+                          className="group relative flex h-full min-h-[180px] flex-col border border-white/10 bg-black/35 p-5 md:min-h-[200px] md:p-6"
+                        >
+                          <div className="mb-4 flex items-center justify-between gap-3">
+                            <span
+                              className="font-mono text-2xl font-black leading-none tabular-nums tracking-[0.12em] text-white/30 md:text-3xl"
+                            >
+                              {step}
+                            </span>
                             <div
-                              className={`flex h-12 w-12 items-center justify-center rounded-2xl border ring-4 ring-black/60 md:h-14 md:w-14 ${
+                              className={`flex h-11 w-11 items-center justify-center rounded-xl border ring-4 ring-black/60 ${
                                 item.step === '01'
-                                  ? 'border-violet-400/40 bg-gradient-to-br from-violet-500/[0.2] via-fuchsia-500/[0.08] to-black/80 text-violet-100 shadow-[0_12px_44px_rgba(167,139,250,0.22)]'
+                                  ? 'border-violet-400/40 bg-gradient-to-br from-violet-500/[0.2] via-fuchsia-500/[0.08] to-black/80 text-violet-100'
                                   : item.step === '02'
-                                    ? 'border-teal-400/40 bg-gradient-to-br from-teal-500/[0.18] via-cyan-500/[0.1] to-black/80 text-teal-50 shadow-[0_12px_44px_rgba(45,212,191,0.2)]'
+                                    ? 'border-teal-400/40 bg-gradient-to-br from-teal-500/[0.18] via-cyan-500/[0.1] to-black/80 text-teal-50'
                                     : item.step === '03'
-                                      ? 'border-sky-400/40 bg-gradient-to-br from-sky-500/[0.18] via-blue-500/[0.08] to-black/80 text-sky-50 shadow-[0_12px_44px_rgba(56,189,248,0.18)]'
-                                      : 'border-emerald-400/40 bg-gradient-to-br from-emerald-500/[0.18] via-green-500/[0.08] to-black/80 text-emerald-50 shadow-[0_12px_44px_rgba(52,211,153,0.18)]'
+                                      ? 'border-sky-400/40 bg-gradient-to-br from-sky-500/[0.18] via-blue-500/[0.08] to-black/80 text-sky-50'
+                                      : 'border-emerald-400/40 bg-gradient-to-br from-emerald-500/[0.18] via-green-500/[0.08] to-black/80 text-emerald-50'
                               }`}
                             >
-                              <item.CustomIcon className="h-[1.9rem] w-[1.9rem] md:h-9 md:w-9" />
+                              <item.CustomIcon className="h-7 w-7" />
                             </div>
-                            {/* Мобильная линия между шагами */}
-                            {idx < MENTORSHIP_FEATURE_ICONS.length - 1 && (
-                              <div
-                                className="mt-4 h-8 w-[2px] rounded-full bg-gradient-to-b from-white/25 to-white/5 md:hidden"
-                                aria-hidden
-                              />
-                            )}
                           </div>
-                          <div className="min-w-0 flex-1 pt-0.5 md:pt-1">
-                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                              <span
-                                className={`font-mono text-[10px] tabular-nums tracking-wider ${
-                                  item.step === '01'
-                                    ? 'text-violet-300/95'
-                                    : item.step === '02'
-                                      ? 'text-teal-300/95'
-                                      : item.step === '03'
-                                        ? 'text-sky-300/95'
-                                        : 'text-emerald-300/95'
-                                }`}
-                              >
-                                {step}
-                              </span>
-                              <span
-                                className={`hidden h-px w-12 bg-gradient-to-r to-transparent sm:block ${
-                                  item.step === '01'
-                                    ? 'from-violet-400/55'
-                                    : item.step === '02'
-                                      ? 'from-teal-400/55'
-                                      : item.step === '03'
-                                        ? 'from-sky-400/55'
-                                        : 'from-emerald-400/55'
-                                }`}
-                                aria-hidden
-                              />
-                            </div>
-                            <p className="mt-2 text-lg font-bold tracking-tight text-white md:text-xl">{title}</p>
-                            <p className="mt-2 max-w-2xl text-[13px] leading-relaxed text-white/68 md:text-[15px] md:leading-relaxed">
-                              {desc}
-                            </p>
-                          </div>
+                          <p className="inline-flex w-fit items-center rounded-lg border border-white/20 bg-white/[0.08] px-2.5 py-1 text-lg font-extrabold tracking-tight text-white shadow-[0_0_18px_rgba(255,255,255,0.08)] md:text-xl">
+                            {title}
+                          </p>
+                          <p className="mt-3 text-[13px] leading-relaxed text-white/52 md:text-[15px] md:leading-relaxed">
+                            {desc}
+                          </p>
                         </li>
                       );
                     })}
@@ -1276,37 +1244,6 @@ const App: React.FC = () => {
                 </div>
              </div>
 
-             {/* Prop Firm Certificates Section */}
-             <div className="mt-8 md:mt-16 mb-20">
-                <div className="flex items-center gap-4 mb-8 md:mb-12">
-                  <h2 className="text-2xl md:text-4xl font-black tracking-tighter text-white uppercase">Prop Firm Certificates</h2>
-                  <div className="h-[1px] flex-1 bg-white/10" />
-                </div>
-
-                <div className="flex justify-center">
-                  {CERTIFICATES_DATA.map((cert) => (
-                    <div 
-                      key={cert.id} 
-                      className="group relative bg-black/40 border border-white/10 rounded-xl md:rounded-[2rem] overflow-hidden transition-all duration-500 w-full max-w-sm"
-                    >
-                      {/* Image Container */}
-                      <div className="aspect-[3/4] relative overflow-hidden">
-                        <img 
-                          src={cert.imageUrl} 
-                          alt="Prop Firm Certificate"
-                          referrerPolicy="no-referrer"
-                          className="w-full h-full object-cover"
-                        />
-                        
-                        {/* Firm Badge */}
-                        <div className="absolute top-4 right-4 md:top-6 md:right-6 bg-black/60 backdrop-blur-md border border-white/20 px-3 py-1 rounded-full">
-                          <p className="text-[8px] md:text-[10px] font-mono text-white uppercase tracking-widest">{cert.firm}</p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-             </div>
             </div>
           </div>
         </div>
