@@ -67,6 +67,10 @@ const MENTORSHIP_COPY: Record<
     asideLines: [string, string, string];
     sectionTitle: string;
     features: { title: string; desc: string }[];
+    resultTitle: string;
+    resultLead: string;
+    resultItems: string[];
+    resultHighlight: string;
     ctaEyebrow: string;
     ctaTitle: string;
     ctaBody: string;
@@ -107,6 +111,16 @@ const MENTORSHIP_COPY: Record<
         desc: 'Voice or video; length and frequency by agreement.',
       },
     ],
+    resultTitle: 'What you get in the end',
+    resultLead: 'After full training, you leave not with theory, but with a practical base for independent trading:',
+    resultItems: [
+      'Market understanding at an earning level',
+      'A fully formed trading system',
+      'Capital management skills',
+      'A structured trading routine',
+      'Skills for working with prop firms',
+    ],
+    resultHighlight: 'And most importantly, you build your own unique approach to trading.',
     ctaEyebrow: 'Next step',
     ctaTitle: 'Start on Telegram',
     ctaBody:
@@ -147,6 +161,16 @@ const MENTORSHIP_COPY: Record<
         desc: 'Голос или видео; длительность и частота по договорённости.',
       },
     ],
+    resultTitle: 'Что вы получите на выходе',
+    resultLead: 'После полного обучения вы выйдете не с теорией, а с практической базой для самостоятельной торговли:',
+    resultItems: [
+      'Понимание рынка на уровне заработка',
+      'Полностью сформированную торговую систему',
+      'Навыки по управлению капиталом',
+      'Сформированную торговую рутину',
+      'Навыки работы с проп-компаниями',
+    ],
+    resultHighlight: 'И самое главное - вы сформируете ваш личный, уникальный подход к трейдингу.',
     ctaEyebrow: 'Следующий шаг',
     ctaTitle: 'Начать в Telegram',
     ctaBody:
@@ -893,6 +917,44 @@ const App: React.FC = () => {
                       );
                     })}
                   </ul>
+                </div>
+              </div>
+
+              {/* Result block */}
+              <div className="mb-14 md:mb-16">
+                <div className="relative px-1">
+                  <div className="pointer-events-none absolute -right-16 top-0 h-44 w-44 rounded-full bg-cyan-400/10 blur-3xl" aria-hidden />
+                  <div className="pointer-events-none absolute -left-10 bottom-0 h-36 w-36 rounded-full bg-indigo-500/10 blur-3xl" aria-hidden />
+
+                  <p className={`text-[11px] font-semibold tracking-[0.22em] text-white/45 ${mentorshipIsRu ? '' : 'uppercase'}`}>
+                    {mentorshipT.resultTitle}
+                  </p>
+                  <p className="mt-3 max-w-3xl text-sm leading-relaxed text-white/72 md:text-[15px]">
+                    {mentorshipT.resultLead}
+                  </p>
+
+                  <ul className="mt-6 space-y-3">
+                    {mentorshipT.resultItems.map((item, idx) => (
+                      <li
+                        key={item}
+                        className="group relative overflow-hidden rounded-2xl border border-white/12 bg-black/35 px-4 py-4 text-white/90"
+                      >
+                        <span className="pointer-events-none absolute inset-y-0 left-0 w-[3px] bg-gradient-to-b from-cyan-300/70 via-white/35 to-indigo-400/70 opacity-80" aria-hidden />
+                        <div className="flex items-start gap-3 pl-1">
+                          <span className="mt-0.5 inline-flex h-6 min-w-6 items-center justify-center rounded-full border border-white/25 bg-white/10 font-mono text-[10px] font-bold text-white/90">
+                            {idx + 1}
+                          </span>
+                          <span className="text-[14px] font-medium leading-relaxed md:text-[15px]">{item}</span>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+
+                  <div className="mt-6 rounded-2xl border border-cyan-300/25 bg-gradient-to-r from-cyan-500/12 via-white/[0.06] to-indigo-500/12 px-5 py-4 shadow-[0_0_30px_rgba(56,189,248,0.08)]">
+                    <p className="text-sm font-semibold leading-relaxed text-white md:text-[15px]">
+                      {mentorshipT.resultHighlight}
+                    </p>
+                  </div>
                 </div>
               </div>
 
