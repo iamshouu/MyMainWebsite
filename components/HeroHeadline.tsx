@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 const HEADLINE_CLASSES =
-  "font-['Outfit'] text-3xl md:text-7xl tracking-tight flex items-baseline justify-center gap-x-2 md:gap-x-5 select-none leading-none whitespace-nowrap px-3 py-4 md:px-14 md:py-10";
+  "font-['Outfit'] text-3xl md:text-7xl tracking-tight flex items-baseline justify-center gap-x-2 md:gap-x-5 select-none !leading-[1.3] whitespace-nowrap px-3 pt-4 pb-6 md:px-14 md:pt-10 md:pb-14";
 
 // Apple-style cycling greetings — comma included so layout stays consistent
 const GREETINGS = [

@@ -367,7 +367,7 @@ const MentorshipView: React.FC<MentorshipViewProps> = ({
                 willChange: 'transform, opacity',
               }}
             >
-              {isRu ? 'Опоры' : 'Pillars'}
+              {isRu ? 'Преимущества' : 'Advantages'}
             </h2>
 
             {/* Section header */}

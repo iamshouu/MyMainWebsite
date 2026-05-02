@@ -139,7 +139,11 @@
 
       .apple-draw-text {
         background-image: linear-gradient(90deg, currentColor 0%, currentColor 48%, transparent 56%, transparent 100%);
-        background-size: 220% 100%;
+        /* 130% vertical so the gradient extends past padding-box top/bottom and
+           covers glyph descenders (e.g. the j in "bonjour"). Without this,
+           descenders that overflow the painting area show -webkit-text-fill-color
+           (transparent) and look chopped off. */
+        background-size: 220% 130%;
         background-position: 100% center;
         background-repeat: no-repeat;
         background-clip: text;

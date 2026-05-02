@@ -292,13 +292,20 @@ export const PERFORMANCE_DATA = [
   { date: '12 Mar', value: 14.25 },
   { date: '16 Mar', value: 13.25 },
   { date: '30 Mar', value: 12.25 },
+  { date: '03 Apr', value: 14.55 },
+  { date: '08 Apr', value: 14.55 },
+  { date: '11 Apr', value: 14.55 },
+  { date: '15 Apr', value: 13.55 },
+  { date: '18 Apr', value: 13.55 },
+  { date: '22 Apr', value: 13.55 },
+  { date: '28 Apr', value: 16.15 },
 ];
 
 export const MONTHLY_PERFORMANCE_DATA = [
   { month: 'Jan', value: 15.8, hasData: true, trades: 12 },
   { month: 'Feb', value: 1.15, hasData: true, trades: 8 },
   { month: 'Mar', value: -4.7, hasData: true, trades: 6 },
-  { month: 'Apr', value: 0, hasData: false, trades: 0 },
+  { month: 'Apr', value: 3.9, hasData: true, trades: 7 },
   { month: 'May', value: 0, hasData: false, trades: 0 },
   { month: 'Jun', value: 0, hasData: false, trades: 0 },
   { month: 'Jul', value: 0, hasData: false, trades: 0 },
@@ -318,10 +325,10 @@ export const CERTIFICATES_DATA = [
 ];
 
 export const TRADING_DETAILED_STATS = [
-  { label: 'Total Trades', value: '26', type: 'neutral' },
-  { label: 'Win Rate', value: '61.3%', type: 'winrate' },
+  { label: 'Total Trades', value: '33', type: 'neutral' },
+  { label: 'Win Rate', value: '62.1%', type: 'winrate' },
   { label: 'Average RR', value: '1:2.10', type: 'neutral' },
-  { label: 'Profit Factor', value: '1.78', type: 'neutral' },
+  { label: 'Profit Factor', value: '1.95', type: 'neutral' },
   { label: 'Max Drawdown', value: '-8.3%', type: 'negative' },
   { label: 'Best Trade', value: '+6.3%', type: 'positive' },
   { label: 'Worst Trade', value: '-2.3%', type: 'negative' },

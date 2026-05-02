@@ -781,7 +781,7 @@ const App: React.FC = () => {
                   </div>
                   <div className="text-right flex flex-col items-end">
                     <div className="flex items-center gap-2 md:gap-3">
-                      <p className="text-2xl md:text-4xl font-black tracking-tighter text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">+12.25%</p>
+                      <p className="text-2xl md:text-4xl font-black tracking-tighter text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">+16.15%</p>
                       <span className="bg-white/10 text-white/80 text-[8px] md:text-[10px] font-mono px-2 py-1 rounded-md uppercase tracking-wider border border-white/10">1Y</span>
                     </div>
                     <p className="text-[11px] md:text-[13px] font-mono text-white/60 uppercase tracking-widest mt-1 md:mt-2">Total Growth (Last Year)</p>
