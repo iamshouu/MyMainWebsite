@@ -42,7 +42,10 @@ const Section: React.FC<SectionProps> = ({ id, children, className = '' }) => {
       ref={sectionRef}
       className={`min-h-[100dvh] w-full snap-start snap-always flex flex-col items-center justify-center relative px-4 md:px-20 py-16 md:py-12 ${/\boverflow-/.test(className) ? '' : 'overflow-hidden'} ${className}`}
     >
-      <div className={`w-full h-full flex flex-col items-center justify-center section-transition ${isActive ? 'section-active' : ''}`}>
+      <div
+        className={`w-full flex flex-col items-center justify-center section-transition ${isActive ? 'section-active' : ''}`}
+        style={{ flex: '1 1 0%' }}
+      >
         {children}
       </div>
     </section>

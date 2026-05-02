@@ -17,6 +17,10 @@ import ProjectCard from './components/ProjectCard';
 import CustomCursor from './components/CustomCursor';
 import Sparkles from './components/Sparkles';
 import MainSocialIcon from './components/MainSocialIcon';
+import HeroHeadline from './components/HeroHeadline';
+import AboutMe from './components/AboutMe';
+import Roadmap from './components/Roadmap';
+import MentorshipView from './components/MentorshipView';
 import MentorshipAmbientBackground from './components/MentorshipAmbientBackground';
 import MentorshipPersonalPathIcon from './components/MentorshipPersonalPathIcon';
 import MentorshipSupportIcon from './components/MentorshipSupportIcon';
@@ -24,12 +28,15 @@ import MentorshipConferenceIcon from './components/MentorshipConferenceIcon';
 import MentorshipFlexibleIcon from './components/MentorshipFlexibleIcon';
 import PerformanceAmbientBackground from './components/PerformanceAmbientBackground';
 import ArchiveAmbientBackground from './components/ArchiveAmbientBackground';
+import InfiniteGridBackground from './components/InfiniteGridBackground';
 import { 
   ChevronDown, 
   FolderCode, 
   ArrowLeft, 
-  Volume2, 
-  VolumeX, 
+  Volume,
+  Volume1,
+  Volume2,
+  VolumeX,
   MonitorPlay,
   Users,
   GraduationCap,
@@ -236,12 +243,14 @@ const App: React.FC = () => {
   const [viewMode, setViewMode] = useState<'main' | 'projects' | 'performance' | 'mentorship'>('main');
   const [mainSiteLocale, setMainSiteLocale] = useState<UiLocale>('en');
   const [mentorshipLocale, setMentorshipLocale] = useState<UiLocale>('en');
-  const [isMuted, setIsMuted] = useState(false); 
-  const [volume, setVolume] = useState(0.05); // Set to 5% as requested
+  const [isMuted, setIsMuted] = useState(false);
+  // Quiet default — first level of the cycle, very gentle on entry
+  const [volume, setVolume] = useState(0.03);
   const [hasInteracted, setHasInteracted] = useState(false);
   const [performanceAnimReady, setPerformanceAnimReady] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
+  const heroContentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (viewMode === 'performance') {
@@ -313,15 +322,24 @@ const App: React.FC = () => {
     setIsMuted(!isMuted);
   };
 
-  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = parseFloat(e.target.value);
-    setVolume(val);
-    if (val > 0) {
-      setIsMuted(false);
-    } else {
-      setIsMuted(true);
-    }
+  // Discrete volume levels, ascending from very-quiet to loud-ish
+  const VOLUME_LEVELS = [0.03, 0.12, 0.35, 0.7] as const;
+
+  const cycleVolume = () => {
     if (!hasInteracted) setHasInteracted(true);
+    if (isMuted || volume <= 0) {
+      // Was muted → first audible level
+      setIsMuted(false);
+      setVolume(VOLUME_LEVELS[0]);
+      return;
+    }
+    const currentIdx = VOLUME_LEVELS.findIndex((l) => Math.abs(l - volume) < 0.005);
+    if (currentIdx === -1 || currentIdx === VOLUME_LEVELS.length - 1) {
+      // Custom volume or already at the loudest level → mute
+      setIsMuted(true);
+      return;
+    }
+    setVolume(VOLUME_LEVELS[currentIdx + 1]);
   };
 
   const handleNavigation = (id: string) => {
@@ -333,6 +351,49 @@ const App: React.FC = () => {
       }
     }, 50);
   };
+
+  // Hero → About me cinematic transition driven by scroll position.
+  // Hero content tilts back / scales / fades as user scrolls past 0..vh.
+  // About me header lifts in (translateY + scale) over the same range.
+  useEffect(() => {
+    if (viewMode !== 'main') return;
+    const main = scrollContainerRef.current;
+    if (!main) return;
+
+    let scheduled = false;
+    const update = () => {
+      scheduled = false;
+      const vh = window.innerHeight;
+      const scrollTop = main.scrollTop;
+      const progress = Math.max(0, Math.min(1, scrollTop / vh));
+      const eased = progress * progress;
+
+      const hero = heroContentRef.current;
+      if (hero) {
+        const ty = -eased * 60;
+        const scale = 1 - eased * 0.14;
+        const rotateX = eased * 16;
+        const opacity = 1 - progress * 0.85;
+        const blur = progress * 3;
+        hero.style.transform = `translateY(${ty}px) scale(${scale}) perspective(900px) rotateX(${rotateX}deg)`;
+        hero.style.opacity = String(opacity);
+        hero.style.filter = blur > 0.05 ? `blur(${blur}px)` : 'none';
+      }
+
+    };
+
+    const onScroll = () => {
+      if (scheduled) return;
+      scheduled = true;
+      requestAnimationFrame(update);
+    };
+
+    main.addEventListener('scroll', onScroll, { passive: true });
+    update();
+    return () => {
+      main.removeEventListener('scroll', onScroll);
+    };
+  }, [viewMode]);
 
   const homeT = MAIN_SITE_COPY[mainSiteLocale];
   const mentorshipT = MENTORSHIP_COPY[mentorshipLocale];
@@ -431,32 +492,44 @@ const App: React.FC = () => {
       <audio ref={audioRef} src={MEDIA_CONFIG.audioUrl} loop />
 
       {/* Dynamic Header */}
-      <header className="fixed top-0 left-0 w-full p-6 md:p-10 z-[100] flex justify-between items-start pointer-events-none">
+      <header className="fixed top-0 left-0 w-full p-6 md:p-10 z-[300] flex justify-between items-start pointer-events-none">
         <div className="flex flex-col gap-3 md:gap-4 pointer-events-auto">
-          <div className="flex items-center gap-2 md:gap-3 group/audio">
-            <button 
-              onClick={toggleMute}
-              className="p-2 md:p-3 bg-white/5 hover:bg-white/10 backdrop-blur-md rounded-full border border-white/10 transition-all flex items-center justify-center shadow-2xl"
-            >
-              {isMuted || volume === 0 ? (
-                <VolumeX size={16} className="text-white/30 md:w-[18px]" />
-              ) : (
-                <Volume2 size={16} className="text-white animate-pulse md:w-[18px]" />
-              )}
-            </button>
-            
-            <div className="w-0 overflow-hidden group-hover/audio:w-20 md:group-hover/audio:w-28 group-hover/audio:ml-2 transition-all duration-500 ease-out flex items-center bg-white/5 backdrop-blur-md px-0 group-hover/audio:px-3 rounded-full border border-transparent group-hover/audio:border-white/10 h-8 md:h-10">
-              <input 
-                type="range"
-                min="0"
-                max="1"
-                step="0.01"
-                value={isMuted ? 0 : volume}
-                onChange={handleVolumeChange}
-                className="w-full h-1 bg-white/20 rounded-full appearance-none cursor-pointer accent-white"
-              />
-            </div>
-          </div>
+          <button
+            type="button"
+            onClick={cycleVolume}
+            className="group flex items-center gap-2.5 md:gap-3 pl-3 pr-3.5 md:pl-3.5 md:pr-4 py-2 md:py-2.5 bg-white/[0.04] hover:bg-white/[0.09] backdrop-blur-xl rounded-full border border-white/10 hover:border-white/25 transition-all shadow-[0_8px_30px_rgba(0,0,0,0.45)]"
+            aria-label={isMuted || volume === 0 ? 'Volume muted, click to unmute' : `Volume level ${VOLUME_LEVELS.findIndex((l) => Math.abs(l - volume) < 0.005) + 1} of ${VOLUME_LEVELS.length}, click to cycle`}
+            title="Click to change volume"
+          >
+            {isMuted || volume === 0 ? (
+              <VolumeX size={14} className="text-white/40 group-hover:text-white/70 transition-colors md:w-4 md:h-4" />
+            ) : volume < 0.08 ? (
+              <Volume size={14} className="text-white md:w-4 md:h-4" />
+            ) : volume < 0.25 ? (
+              <Volume1 size={14} className="text-white md:w-4 md:h-4" />
+            ) : (
+              <Volume2 size={14} className="text-white md:w-4 md:h-4" />
+            )}
+
+            {/* Bar visualizer — ascending heights, lit white when level reached */}
+            <span className="flex items-end gap-[3px] md:gap-1 h-4 md:h-[18px]" aria-hidden>
+              {VOLUME_LEVELS.map((lvl, i) => {
+                const isOn = !isMuted && volume >= lvl - 0.005;
+                return (
+                  <span
+                    key={i}
+                    className="w-[2.5px] md:w-[3px] rounded-full transition-all duration-300 ease-out"
+                    style={{
+                      height: `${5 + i * 3}px`,
+                      background: isOn ? '#fff' : 'rgba(255,255,255,0.18)',
+                      boxShadow: isOn ? '0 0 8px rgba(255,255,255,0.45)' : 'none',
+                      transitionDelay: `${i * 40}ms`,
+                    }}
+                  />
+                );
+              })}
+            </span>
+          </button>
           
           <div className="flex flex-col cursor-pointer group pointer-events-auto" onClick={() => handleNavigation('personality')}>
             <span className="text-[7px] md:text-[9px] font-mono font-bold tracking-[0.3em] md:tracking-[0.5em] text-white/80 group-hover:text-white transition-all duration-500 uppercase">
@@ -526,41 +599,21 @@ const App: React.FC = () => {
         className={`w-full scroll-container relative z-10 no-scrollbar ${viewMode === 'main' ? 'block' : 'hidden'}`}
       >
         <Section id="personality">
-          <div className="flex flex-col items-center text-center animate-fade-in-up">
+          <div
+            ref={heroContentRef}
+            className="flex flex-col items-center text-center gap-14 md:gap-24"
+            style={{ transformOrigin: 'center top', willChange: 'transform, opacity, filter' }}
+          >
             <Sparkles>
-              <div className="relative group mb-4 md:mb-8 logo-container py-4">
-                <h1 className="text-4xl md:text-8xl font-black tracking-tighter flex items-center justify-center select-none overflow-visible">
-                  <span className="outline-text block transform group-hover:-translate-x-4 transition-transform duration-700">Danya</span>
-                  <span className="bg-white text-black px-4 md:px-8 py-0 md:py-2 transform -skew-x-12 md:translate-x-[-15%] group-hover:translate-x-4 transition-transform duration-700 shadow-[0_0_50px_rgba(255,255,255,0.3)]">
-                    SHOU
-                  </span>
-                </h1>
-                <div className="mt-2 md:mt-4 flex items-center justify-between w-full px-2">
-                   <div className="h-[1px] bg-white/20 flex-1" />
-                   <div className="px-3 md:px-4 text-[7px] md:text-[9px] font-mono text-white/80 tracking-[0.3em] md:tracking-[0.6em] uppercase">{homeT.tradingDesk}</div>
-                   <div className="h-[1px] bg-white/20 flex-1" />
-                </div>
+              <div
+                className="relative group py-6 md:py-10 animate-fade-in-up"
+                style={{ animationFillMode: 'both' }}
+              >
+                <HeroHeadline />
               </div>
             </Sparkles>
-            
-            <p className="text-white/80 text-[9px] md:text-xs font-mono mb-6 md:mb-10 tracking-[0.5em] md:tracking-[0.8em] flex items-center gap-3 md:gap-4">
-              <span className="w-6 md:w-8 h-[1px] bg-white/40" />
-              {homeT.status}
-              <span className="w-6 md:w-8 h-[1px] bg-white/40" />
-            </p>
 
-            <div className="flex flex-col items-center gap-2 md:gap-3 mb-8 md:mb-12 max-w-lg px-4">
-              <div className="flex items-center gap-2 px-4 md:px-6 py-2 md:py-2.5 bg-white/10 border border-white/20 rounded-full group-hover:border-white/40 transition-all">
-                <span className="text-[8px] md:text-xs font-bold uppercase tracking-[0.2em] md:tracking-[0.4em] text-white">
-                  {homeT.motto}
-                </span>
-              </div>
-              <p className="text-[11px] md:text-[13px] font-mono uppercase tracking-[0.16em] md:tracking-[0.22em] text-white/90 leading-relaxed text-center">
-                {homeT.credo}
-              </p>
-            </div>
-
-            <div className="flex flex-wrap justify-center gap-6 md:gap-8 mb-10 md:mb-20 max-w-5xl px-4">
+            <div className="flex flex-wrap justify-center gap-7 md:gap-10 max-w-5xl px-4">
               {SOCIAL_LINKS.map((link, idx) => (
                 <MainSocialIcon key={idx} link={link} index={idx} />
               ))}
@@ -570,7 +623,7 @@ const App: React.FC = () => {
 
           <button
             type="button"
-            onClick={() => handleNavigation('experience')}
+            onClick={() => handleNavigation('about')}
             aria-label={homeT.scrollToExperienceAria}
             className="absolute bottom-6 md:bottom-10 left-1/2 -translate-x-1/2 animate-bounce opacity-30 hover:opacity-80 transition-opacity pointer-events-auto"
           >
@@ -578,129 +631,19 @@ const App: React.FC = () => {
           </button>
         </Section>
 
-        <Section id="experience" className="overflow-visible">
-           {/* Как в референсе: узкий центрированный блок, две равные колонки — текст ближе к центру, справа телефон вместо сетки/радара */}
-           <div className="z-10 mx-auto grid w-full max-w-6xl grid-cols-1 gap-12 px-4 sm:px-6 md:px-8 lg:grid-cols-2 lg:gap-10 xl:gap-14 lg:items-center lg:px-4 xl:px-6">
-             <div className="animate-fade-in-up w-full max-w-xl justify-self-center lg:max-w-[540px] lg:justify-self-end">
-                <h2 className="text-3xl md:text-7xl font-black mb-6 md:mb-12 flex items-center gap-3 md:gap-5 tracking-tighter">
-                  <span className="w-1 h-8 md:w-1.5 md:h-16 bg-white shadow-[0_0_30px_rgba(255,255,255,0.4)]"></span>
-                  {homeT.experienceTitle}
-                </h2>
-                <div className="space-y-4 md:space-y-6">
-                  {homeT.stats.map((stat, idx) => (
-                    <div key={idx} className="bg-white/5 backdrop-blur-md border border-white/5 p-5 sm:p-7 md:p-10 rounded-2xl md:rounded-[1.75rem] hover:border-white/20 hover:bg-white/10 transition-all duration-500 group">
-                       <p className="text-white/50 text-[8px] md:text-[10px] font-bold uppercase tracking-[0.3em] md:tracking-[0.4em] mb-1 md:mb-3 group-hover:text-white/70 transition-colors">{stat.label}</p>
-                       {stat.variant === 'markets' ? (
-                         <p className="flex flex-wrap items-baseline gap-x-2 md:gap-x-3 gap-y-1 text-2xl md:text-4xl font-black tracking-tighter text-white">
-                           <span>{stat.segments[0]}</span>
-                           <span className="text-white/35" aria-hidden>/</span>
-                           <span>{stat.segments[1]}</span>
-                           <span className="text-white/35" aria-hidden>/</span>
-                           <span>{stat.segments[2]}</span>
-                         </p>
-                       ) : (
-                         <p className="text-2xl md:text-4xl font-black text-white tracking-tighter">{stat.value}</p>
-                       )}
-                       <p className="text-[12px] md:text-[14px] text-white/60 mt-3 md:mt-4 font-medium leading-relaxed">{stat.description}</p>
-                    </div>
-                  ))}
-                </div>
-             </div>
-             <div className="flex w-full min-w-0 flex-col items-center gap-8 lg:flex-row lg:items-end lg:justify-center lg:gap-5 xl:gap-8 justify-self-center lg:pl-2">
-                {EXPERIENCE_VIDEO.src ? (
-                  <>
-                    <div className="experience-section-video-wrap min-w-0 w-full flex-1">
-                      <video
-                        className="experience-section-video"
-                        src={EXPERIENCE_VIDEO.src}
-                        poster={EXPERIENCE_VIDEO.poster || undefined}
-                        autoPlay
-                        loop
-                        muted
-                        playsInline
-                        preload="metadata"
-                      />
-                    </div>
-                    <aside
-                      className="flex w-full max-w-[17rem] shrink-0 flex-col items-center border-t border-white/10 pt-6 text-center lg:w-auto lg:max-w-[13rem] lg:border-l lg:border-t-0 lg:pt-0 lg:pl-6 lg:pr-1 lg:text-left"
-                      aria-label={homeT.experienceAsideAria}
-                    >
-                      <p className="font-mono text-[9px] font-bold uppercase tracking-[0.45em] text-white/40">
-                        Telegram
-                      </p>
-                      <p className="mt-2 text-[11px] leading-relaxed text-white/55 md:text-xs">
-                        {homeT.experienceTelegramHint}
-                      </p>
-                      <a
-                        href={MENTORSHIP_TELEGRAM_URL}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="group mt-4 inline-flex items-center gap-2.5 rounded-2xl border border-white/15 bg-white/[0.06] px-4 py-3 font-mono text-[13px] tracking-tight text-white shadow-[0_0_0_1px_rgba(255,255,255,0.06)] transition-all hover:border-white/35 hover:bg-white/10 hover:shadow-[0_0_28px_rgba(255,255,255,0.08)] md:text-sm"
-                      >
-                        <Send
-                          className="h-4 w-4 shrink-0 text-white/55 transition-colors group-hover:text-white"
-                          strokeWidth={2}
-                          aria-hidden
-                        />
-                        <span>{EXPERIENCE_TELEGRAM_HANDLE}</span>
-                      </a>
-                    </aside>
-                  </>
-                ) : (
-                  <div
-                    className="flex h-[min(72vh,820px)] w-full min-h-[280px] max-w-lg items-center justify-center rounded-2xl border border-dashed border-white/15 bg-white/[0.02] md:min-h-[400px] lg:min-h-[480px]"
-                    aria-hidden
-                  />
-                )}
-             </div>
-           </div>
-        </Section>
+        <AboutMe
+          watermark={homeT.aboutMeWatermark}
+          subtitle={homeT.aboutMeSubtitle}
+          stats={homeT.stats}
+        />
 
-        <Section id="roadmap">
-          <div className="w-full max-w-6xl mx-auto flex flex-col items-center justify-center">
-            <div className="text-center w-full relative mb-12 md:mb-20 pt-10">
-               <h2 className="text-5xl md:text-[10rem] font-black opacity-[0.07] text-white uppercase tracking-tighter absolute top-0 left-1/2 -translate-x-1/2 select-none pointer-events-none w-full whitespace-nowrap">
-                 {homeT.roadmapWatermark}
-               </h2>
-               <div className="relative z-10 flex flex-col items-center">
-                 <p className="text-white font-mono text-[11px] md:text-[16px] uppercase tracking-[0.8em] font-black mb-4 drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]">
-                   {homeT.roadmapSubtitle}
-                 </p>
-                 <div className="h-[1px] w-32 md:w-56 bg-white/40 shadow-[0_0_10px_rgba(255,255,255,0.3)]" />
-               </div>
-            </div>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 w-full px-2 md:px-4">
-              {homeT.roadmapPlans.map((plan, idx) => {
-                const Icon = ROADMAP_ICONS[idx];
-                return (
-                  <div key={idx} className={`group relative p-6 md:p-8 bg-white/5 border rounded-xl md:rounded-[2.5rem] transition-all duration-500 overflow-hidden ${plan.isHighlight ? 'border-white/40 bg-white/10 shadow-[0_0_40px_rgba(255,255,255,0.05)]' : 'border-white/5 hover:bg-white/10 hover:border-white/20'}`}>
-                    <div className="absolute -right-2 -top-2 md:-right-4 md:-top-4 text-white/5 font-black text-6xl md:text-8xl italic group-hover:text-white/10 transition-colors select-none">
-                      {idx + 1}
-                    </div>
-                    <div className="relative z-10 flex flex-col h-full">
-                      <div className={`w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-2xl flex items-center justify-center mb-6 md:mb-8 group-hover:scale-110 transition-transform duration-500 ${plan.isHighlight ? 'bg-white text-black shadow-[0_0_20px_rgba(255,255,255,0.3)]' : 'bg-white/10 text-white'}`}>
-                        <Icon size={20} className="md:w-[28px] md:h-[28px]" />
-                      </div>
-                      <div className="flex items-center gap-2 mb-3 md:mb-4">
-                        <h3 className="text-base md:text-xl font-bold tracking-tight">{plan.title}</h3>
-                        {plan.isSoon && (
-                          <span className="px-1.5 py-0.5 bg-white/10 border border-white/20 rounded text-[7px] font-mono text-white/50 animate-pulse uppercase">{homeT.roadmapSoonBadge}</span>
-                        )}
-                      </div>
-                      <p className="text-[12px] md:text-[14px] text-white/80 font-medium leading-relaxed mb-6 md:mb-8">{plan.desc}</p>
-                      
-                      <div className="flex items-center gap-2 text-[9px] md:text-[11px] font-mono text-white/60 uppercase tracking-widest mt-auto border-t border-white/5 pt-4">
-                        <Clock size={8} />
-                        {plan.status}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </Section>
+        <Roadmap
+          watermark={homeT.roadmapWatermark}
+          subtitle={homeT.roadmapSubtitle}
+          soonBadge={homeT.roadmapSoonBadge}
+          plans={homeT.roadmapPlans}
+          icons={ROADMAP_ICONS}
+        />
 
         <Section id="connect">
            <div className="text-center w-full max-w-5xl flex flex-col h-full justify-center">
@@ -732,10 +675,10 @@ const App: React.FC = () => {
       {viewMode === 'projects' && (
         <div className="fixed inset-0 z-[200] isolate overflow-y-auto">
           <div className="pointer-events-none fixed inset-0 overflow-hidden z-0" aria-hidden>
-            <ArchiveAmbientBackground />
+            <InfiniteGridBackground accent="yellow" />
           </div>
           <div
-            className="pointer-events-none fixed inset-0 z-[1] bg-gradient-to-b from-black/35 via-black/15 to-black/55"
+            className="pointer-events-none fixed inset-0 z-[1] bg-gradient-to-b from-black/55 via-black/30 to-black/60"
             aria-hidden
           />
           <div className="relative z-10 min-h-full p-4 md:p-24">
@@ -759,254 +702,25 @@ const App: React.FC = () => {
       )}
 
       {viewMode === 'mentorship' && (
-        <div
-          className="fixed inset-0 z-[200] isolate overflow-y-auto"
-          lang={mentorshipLocale === 'ru' ? 'ru' : 'en'}
-        >
-          <div className="pointer-events-none fixed inset-0 overflow-hidden z-0" aria-hidden>
-            <MentorshipAmbientBackground />
-          </div>
-          {/* Light veil for text contrast — keep translucent so aurora/glows stay visible */}
-          <div
-            className="pointer-events-none fixed inset-0 z-[1] bg-gradient-to-b from-black/35 via-black/15 to-black/55"
-            aria-hidden
-          />
-          <div className="relative z-10 min-h-full px-4 py-8 md:px-12 md:py-16 lg:px-20 lg:py-20 font-['Outfit',sans-serif]">
-            <div className="max-w-6xl mx-auto pb-28">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-10 md:mb-14">
-                <button
-                  type="button"
-                  onClick={() => setViewMode('main')}
-                  className="inline-flex w-fit items-center gap-2 md:gap-3 text-white/50 hover:text-white transition-all group relative z-50 py-2 pr-4"
-                >
-                  <ArrowLeft size={16} className="group-hover:-translate-x-2 transition-transform md:w-[18px]" />
-                  <span className="font-mono tracking-widest text-[8px] md:text-[10px]">{mentorshipT.back}</span>
-                </button>
-                <div
-                  className="flex w-fit rounded-full border border-white/15 bg-black/35 p-0.5 font-mono text-[9px] md:text-[10px] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
-                  role="group"
-                  aria-label={mentorshipIsRu ? 'Язык страницы' : 'Page language'}
-                >
-                  <button
-                    type="button"
-                    onClick={() => setMentorshipLocale('en')}
-                    className={`rounded-full px-3 py-1.5 transition-colors ${
-                      mentorshipLocale === 'en' ? 'bg-white/15 text-white shadow-sm' : 'text-white/45 hover:text-white/85'
-                    }`}
-                  >
-                    EN
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setMentorshipLocale('ru')}
-                    className={`rounded-full px-3 py-1.5 transition-colors ${
-                      mentorshipLocale === 'ru' ? 'bg-white/15 text-white shadow-sm' : 'text-white/45 hover:text-white/85'
-                    }`}
-                  >
-                    RU
-                  </button>
-                </div>
-              </div>
-
-              {/* Hero — asymmetric grid, not a single column */}
-              <div className="relative grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 lg:items-start mb-14 md:mb-20">
-                <div
-                  className="pointer-events-none absolute -left-4 top-0 hidden lg:block h-[min(70%,420px)] w-px bg-gradient-to-b from-white/25 via-white/10 to-transparent"
-                  aria-hidden
-                />
-                <div className="lg:col-span-7 relative">
-                  <div className="flex flex-wrap items-center gap-2 mb-5 md:mb-6">
-                    <span
-                      className={`inline-flex items-center rounded-full border border-white/15 bg-white/[0.04] px-3 py-1 font-mono text-[9px] text-white/70 ${
-                        mentorshipIsRu ? 'tracking-wide' : 'uppercase tracking-[0.25em]'
-                      }`}
-                    >
-                      {mentorshipT.badge1}
-                    </span>
-                    <span
-                      className={`inline-flex items-center rounded-full border border-white/10 bg-white/[0.02] px-3 py-1 font-mono text-[9px] text-white/45 ${
-                        mentorshipIsRu ? 'tracking-wide' : 'uppercase tracking-[0.2em]'
-                      }`}
-                    >
-                      {mentorshipT.badge2}
-                    </span>
-                  </div>
-                  <h2 className="text-[clamp(2.5rem,6vw,4.5rem)] font-black tracking-tighter leading-[0.95] text-white mb-6 drop-shadow-[0_4px_40px_rgba(0,0,0,0.6)]">
-                    <span className="block bg-gradient-to-br from-white via-white to-white/55 bg-clip-text text-transparent">
-                      {mentorshipT.title}
-                    </span>
-                    <span className="mt-3 block text-[clamp(1rem,2.4vw,1.35rem)] font-semibold tracking-tight text-white/88">
-                      {mentorshipT.heroSub}
-                    </span>
-                  </h2>
-                  <p className="text-base md:text-lg text-white/75 leading-relaxed max-w-xl border-l border-white/15 pl-5 md:pl-6">
-                    {mentorshipT.heroBody}
-                  </p>
-                </div>
-
-                <aside className="lg:col-span-5 lg:sticky lg:top-24">
-                  <div className="relative flex flex-col overflow-hidden rounded-3xl border border-white/12 bg-gradient-to-br from-white/[0.08] via-white/[0.03] to-white/[0.02] p-6 md:p-7 shadow-[0_24px_80px_rgba(0,0,0,0.45)]">
-                    <div className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-cyan-500/15 blur-3xl" aria-hidden />
-                    <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/25 to-transparent" aria-hidden />
-                    <p
-                      className={`relative text-[11px] font-semibold tracking-[0.22em] text-white/50 mb-5 ${
-                        mentorshipIsRu ? '' : 'uppercase'
-                      }`}
-                    >
-                      {mentorshipT.asideTitle}
-                    </p>
-                    <ul className="relative space-y-3.5">
-                      {mentorshipT.asideLines.map((line) => (
-                        <li key={line} className="flex gap-3.5 text-[15px] leading-relaxed text-white/90">
-                          <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-gradient-to-br from-white/70 to-white/30 shadow-[0_0_10px_rgba(255,255,255,0.45)]" />
-                          <span>{line}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </aside>
-              </div>
-
-              {/* Четыре опоры — вертикальный трек (таймлайн), не сетка 2×2 */}
-              <div className="mb-14 md:mb-16">
-                <div className="mb-8 md:mb-12">
-                  <h3 className="text-xl md:text-2xl font-black tracking-tight text-white">{mentorshipT.sectionTitle}</h3>
-                </div>
-
-                <div className="relative p-0">
-                  <div
-                    className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_15%_20%,rgba(255,255,255,0.06),transparent)]"
-                    aria-hidden
-                  />
-                  <ul className="relative grid grid-cols-1 gap-0 overflow-hidden rounded-2xl md:grid-cols-2">
-                    {MENTORSHIP_FEATURE_ICONS.map((item, idx) => {
-                      const { title, desc } = mentorshipT.features[idx];
-                      const step = item.step;
-                      return (
-                        <li
-                          key={step}
-                          className="group relative flex h-full min-h-[180px] flex-col border border-white/10 bg-black/35 p-5 md:min-h-[200px] md:p-6"
-                        >
-                          <div className="mb-4 flex items-center justify-between gap-3">
-                            <span
-                              className="font-mono text-2xl font-black leading-none tabular-nums tracking-[0.12em] text-white/30 md:text-3xl"
-                            >
-                              {step}
-                            </span>
-                            <div
-                              className={`flex h-11 w-11 items-center justify-center rounded-xl border ring-4 ring-black/60 ${
-                                item.step === '01'
-                                  ? 'border-violet-400/40 bg-gradient-to-br from-violet-500/[0.2] via-fuchsia-500/[0.08] to-black/80 text-violet-100'
-                                  : item.step === '02'
-                                    ? 'border-teal-400/40 bg-gradient-to-br from-teal-500/[0.18] via-cyan-500/[0.1] to-black/80 text-teal-50'
-                                    : item.step === '03'
-                                      ? 'border-sky-400/40 bg-gradient-to-br from-sky-500/[0.18] via-blue-500/[0.08] to-black/80 text-sky-50'
-                                      : 'border-emerald-400/40 bg-gradient-to-br from-emerald-500/[0.18] via-green-500/[0.08] to-black/80 text-emerald-50'
-                              }`}
-                            >
-                              <item.CustomIcon className="h-7 w-7" />
-                            </div>
-                          </div>
-                          <p className="inline-flex w-fit items-center rounded-lg border border-white/20 bg-white/[0.08] px-2.5 py-1 text-lg font-extrabold tracking-tight text-white shadow-[0_0_18px_rgba(255,255,255,0.08)] md:text-xl">
-                            {title}
-                          </p>
-                          <p className="mt-3 text-[13px] leading-relaxed text-white/52 md:text-[15px] md:leading-relaxed">
-                            {desc}
-                          </p>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </div>
-              </div>
-
-              {/* Result block */}
-              <div className="mb-14 md:mb-16">
-                <div className="relative px-1">
-                  <div className="pointer-events-none absolute -right-16 top-0 h-44 w-44 rounded-full bg-cyan-400/10 blur-3xl" aria-hidden />
-                  <div className="pointer-events-none absolute -left-10 bottom-0 h-36 w-36 rounded-full bg-indigo-500/10 blur-3xl" aria-hidden />
-
-                  <p className={`text-[11px] font-semibold tracking-[0.22em] text-white/45 ${mentorshipIsRu ? '' : 'uppercase'}`}>
-                    {mentorshipT.resultTitle}
-                  </p>
-                  <p className="mt-3 max-w-3xl text-sm leading-relaxed text-white/72 md:text-[15px]">
-                    {mentorshipT.resultLead}
-                  </p>
-
-                  <ul className="mt-6 space-y-3">
-                    {mentorshipT.resultItems.map((item, idx) => (
-                      <li
-                        key={item}
-                        className="group relative overflow-hidden rounded-2xl border border-white/12 bg-black/35 px-4 py-4 text-white/90"
-                      >
-                        <span className="pointer-events-none absolute inset-y-0 left-0 w-[3px] bg-gradient-to-b from-cyan-300/70 via-white/35 to-indigo-400/70 opacity-80" aria-hidden />
-                        <div className="flex items-start gap-3 pl-1">
-                          <span className="mt-0.5 inline-flex h-6 min-w-6 items-center justify-center rounded-full border border-white/25 bg-white/10 font-mono text-[10px] font-bold text-white/90">
-                            {idx + 1}
-                          </span>
-                          <span className="text-[14px] font-medium leading-relaxed md:text-[15px]">{item}</span>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-
-                  <div className="mt-6 rounded-2xl border border-cyan-300/25 bg-gradient-to-r from-cyan-500/12 via-white/[0.06] to-indigo-500/12 px-5 py-4 shadow-[0_0_30px_rgba(56,189,248,0.08)]">
-                    <p className="text-sm font-semibold leading-relaxed text-white md:text-[15px]">
-                      {mentorshipT.resultHighlight}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* CTA strip */}
-              <div className="relative overflow-hidden rounded-3xl border border-white/15 bg-gradient-to-r from-black/60 via-black/40 to-black/60 p-6 md:p-10">
-                <div className="pointer-events-none absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-cyan-400/80 via-white/40 to-indigo-500/80 opacity-80" aria-hidden />
-                <div className="relative flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between pl-3 md:pl-5">
-                  <div>
-                    <p
-                      className={`text-[11px] font-semibold tracking-[0.22em] text-white/45 mb-2 ${
-                        mentorshipIsRu ? '' : 'uppercase'
-                      }`}
-                    >
-                      {mentorshipT.ctaEyebrow}
-                    </p>
-                    <p className="text-lg md:text-xl font-bold text-white tracking-tight">{mentorshipT.ctaTitle}</p>
-                    <p className="mt-2 max-w-md text-sm text-white/55">{mentorshipT.ctaBody}</p>
-                  </div>
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-4 shrink-0">
-                    <a
-                      href={MENTORSHIP_TELEGRAM_URL}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={`inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-black rounded-2xl text-[11px] font-bold tracking-[0.2em] hover:bg-white/92 transition-all shadow-[0_12px_48px_rgba(0,0,0,0.55)] hover:shadow-[0_16px_56px_rgba(255,255,255,0.12)] ${
-                        mentorshipIsRu ? '' : 'uppercase'
-                      }`}
-                    >
-                      <Send size={16} />
-                      {mentorshipT.ctaButton}
-                    </a>
-                    <p
-                      className={`text-[10px] font-medium text-white/40 max-w-[14rem] leading-relaxed ${
-                        mentorshipIsRu ? '' : 'uppercase tracking-widest'
-                      }`}
-                    >
-                      {mentorshipT.ctaNote}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <MentorshipView
+          copy={mentorshipT}
+          features={MENTORSHIP_FEATURE_ICONS}
+          locale={mentorshipLocale}
+          isRu={mentorshipIsRu}
+          onLocaleChange={setMentorshipLocale}
+          onClose={() => setViewMode('main')}
+          telegramUrl={MENTORSHIP_TELEGRAM_URL}
+        />
       )}
+
 
       {viewMode === 'performance' && (
         <div className="fixed inset-0 z-[200] isolate overflow-y-auto">
           <div className="pointer-events-none fixed inset-0 overflow-hidden z-0" aria-hidden>
-            <PerformanceAmbientBackground />
+            <InfiniteGridBackground accent="cyan" />
           </div>
           <div
-            className="pointer-events-none fixed inset-0 z-[1] bg-gradient-to-b from-black/35 via-black/15 to-black/55"
+            className="pointer-events-none fixed inset-0 z-[1] bg-gradient-to-b from-black/55 via-black/30 to-black/60"
             aria-hidden
           />
           <div className="relative z-10 min-h-full p-4 md:p-24">

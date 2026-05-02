@@ -58,6 +58,8 @@ export const MAIN_SITE_COPY: Record<
     experienceTelegramHint: string;
     experienceAsideAria: string;
     scrollToExperienceAria: string;
+    aboutMeWatermark: string;
+    aboutMeSubtitle: string;
     roadmapWatermark: string;
     roadmapSubtitle: string;
     roadmapSoonBadge: string;
@@ -79,7 +81,9 @@ export const MAIN_SITE_COPY: Record<
     experienceTitle: 'EXPERIENCE',
     experienceTelegramHint: 'Search Telegram for the username to open the chat.',
     experienceAsideAria: 'Telegram contact',
-    scrollToExperienceAria: 'Scroll to experience section',
+    scrollToExperienceAria: 'Scroll to about me section',
+    aboutMeWatermark: 'About Me',
+    aboutMeSubtitle: 'Background & Trading Profile',
     roadmapWatermark: 'Future Plans',
     roadmapSubtitle: 'System Evolution Roadmap',
     roadmapSoonBadge: 'SOON',
@@ -140,7 +144,9 @@ export const MAIN_SITE_COPY: Record<
     experienceTitle: 'ОПЫТ',
     experienceTelegramHint: 'В поиске Telegram введи юзернейм — откроется чат.',
     experienceAsideAria: 'Контакт в Telegram',
-    scrollToExperienceAria: 'Перейти к секции «Опыт»',
+    scrollToExperienceAria: 'Перейти к секции «Обо мне»',
+    aboutMeWatermark: 'Обо мне',
+    aboutMeSubtitle: 'Профиль и торговая практика',
     roadmapWatermark: 'Планы',
     roadmapSubtitle: 'Дорожная карта развития системы',
     roadmapSoonBadge: 'СКОРО',

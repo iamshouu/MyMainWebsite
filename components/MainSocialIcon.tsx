@@ -27,11 +27,12 @@ const MainSocialIcon: React.FC<MainSocialIconProps> = ({ link, index }) => {
   const displayIndex = (index + 1).toString().padStart(2, '0');
 
   return (
-    <a 
-      href={link.url} 
-      target="_blank" 
+    <a
+      href={link.url}
+      target="_blank"
       rel="noopener noreferrer"
-      className="group relative flex flex-col items-center justify-center w-20 h-20 md:w-28 md:h-28 transition-all duration-500"
+      className="group relative flex flex-col items-center justify-center w-20 h-20 md:w-28 md:h-28 transition-all duration-500 animate-fade-in-up"
+      style={{ animationDelay: `${800 + index * 120}ms`, animationFillMode: 'both' }}
       title={link.name}
     >
       {/* Corner Brackets - Architectural Aesthetic */}
