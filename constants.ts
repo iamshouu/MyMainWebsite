@@ -201,9 +201,13 @@ export const MAIN_SITE_COPY: Record<
 /**
  * Видео из After Effects в секции Experience. Файл в `public/videos/`, затем путь ниже.
  * Обновлено под новый крупный рендер 3D-модели iPhone (iphone 3d max …).
+ *
+ * Префикс через import.meta.env.BASE_URL — нужен чтобы путь работал и в
+ * dev (base "/") и на GitHub Pages prod (base "/Website/"). Без префикса
+ * деплой запрашивал бы /videos/... из корня gh.io и получал 404.
  */
 export const EXPERIENCE_VIDEO = {
-  src: '/videos/iphone%203d%20max-Picsart-BackgroundRemover.webm' as string,
+  src: `${import.meta.env.BASE_URL}videos/iphone%203d%20max-Picsart-BackgroundRemover.webm` as string,
   poster: '' as string,
 };
 

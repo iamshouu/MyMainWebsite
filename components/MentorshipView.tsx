@@ -67,11 +67,16 @@ const PILLAR_ACCENTS: Accent[] = [
 //   1 cyan    (Full support)       → compass
 //   2 amber   (Online conferences) → speech bubble
 //   3 pink    (Flexible format)    → heart + audio waveform
+//
+// Paths use BASE_URL so they work both in dev (base "/") and on GitHub
+// Pages prod (base "/Website/"). Without the prefix, the deployed site
+// would request /images/... at the gh.io root and 404.
+const BASE = import.meta.env.BASE_URL;
 const PILLAR_IMAGES: string[] = [
-  '/images/card-program-document.png',
-  '/images/card-support-compass.png',
-  '/images/card-conferences-bubble.png',
-  '/images/card-flexible-waveform.png',
+  `${BASE}images/card-program-document.png`,
+  `${BASE}images/card-support-compass.png`,
+  `${BASE}images/card-conferences-bubble.png`,
+  `${BASE}images/card-flexible-waveform.png`,
 ];
 
 // Splits the title into per-letter spans with staggered "rise" animation.
@@ -401,7 +406,7 @@ const MentorshipView: React.FC<MentorshipViewProps> = ({
               revealDelayMs={0}
               isHero
               tagLabel={isRu ? 'ГЛАВНОЕ' : 'FEATURED'}
-              bgImage="/images/card-hero-sparkle.png"
+              bgImage={`${BASE}images/card-hero-sparkle.png`}
             />
           </div>
 
