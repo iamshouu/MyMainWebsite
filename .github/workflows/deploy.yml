@@ -58,6 +58,10 @@ jobs:
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
+        with:
+          # Self-enable Pages with Actions as the source if it hasn't been
+          # toggled in the UI yet. Saves a manual step in Settings → Pages.
+          enablement: true
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
