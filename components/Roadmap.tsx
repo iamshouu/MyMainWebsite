@@ -57,18 +57,15 @@ const Roadmap: React.FC<RoadmapProps> = ({ watermark, subtitle, soonBadge, plans
       const total = plans.length;
       cardRefs.current.forEach((card, idx) => {
         if (!card) return;
-        let cp: number;
-        if (idx === 0) {
-          // first card uses the intro phase (entry from previous section)
-          cp = intro;
-        } else if (total > 1) {
-          const chunk = 1 / (total - 1);
-          const start = (idx - 1) * chunk;
-          const end = idx * chunk;
-          cp = Math.max(0, Math.min(1, (stackProgress - start) / (end - start)));
-        } else {
-          cp = 1;
-        }
+        // All cards (including idx 0) share the pinned scroll range
+        // evenly. Previously card 0 used `intro` and was therefore
+        // already in place by the time the section pinned to the top —
+        // the user saw it stationary while waiting for the rest. Now
+        // every card animates as the user scrolls within the pinned
+        // area, giving the same emerge-from-depth motion to all.
+        const chunk = 1 / total;
+        const start = idx * chunk;
+        const cp = Math.max(0, Math.min(1, (stackProgress - start) / chunk));
         // Easing for a smoother arrival (cubic-out)
         const eased = 1 - Math.pow(1 - cp, 3);
         const z = HIDDEN_TZ * (1 - eased);

@@ -115,6 +115,16 @@
          solid portion of the gradient in from the left, "drawing" the letters from
          left to right. A small leading-edge blur softens the stroke so it feels
          hand-written rather than wiped. */
+      /* Audio equalizer — bars bounce while music plays. transform-origin
+         is set inline (bottom) so each bar grows from its base. */
+      @keyframes equalizer-bar {
+        0%, 100% { transform: scaleY(0.35); }
+        18%      { transform: scaleY(0.85); }
+        38%      { transform: scaleY(1); }
+        62%      { transform: scaleY(0.5); }
+        82%      { transform: scaleY(0.95); }
+      }
+
       /* Per-letter staggered rise — used for hero titles (Mentorship etc.) */
       @keyframes letterRise {
         0%   { opacity: 0; transform: translateY(28px); filter: blur(6px); }
@@ -135,6 +145,31 @@
       .reveal-rise.revealed {
         opacity: 1;
         transform: translateY(0);
+      }
+
+      /* Dim-by-default card — used on Advantages tiles. Dulled saturation
+         and slight brightness drop give a calm gallery feel; on hover the
+         card snaps back to its full natural color, drawing focus.
+         Important: include opacity + transform in the transition list so
+         that when this class is combined with .reveal-rise on the same
+         element, the reveal-rise's fade-and-rise animation still works.
+         (Without this, the `transition` here would override .reveal-rise's
+         own transition declaration via cascade — same specificity, later
+         rule wins — and the cards would pop in instead of easing in.) */
+      .dim-card {
+        filter: saturate(0.45) brightness(0.78);
+        transition:
+          filter 0.5s ease-out,
+          opacity 0.7s ease-out,
+          transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+      }
+      .dim-card:hover {
+        filter: saturate(1) brightness(1);
+      }
+      /* Touch devices — no hover available, so don't trap cards in the
+         dimmed state. Show them at full color instead. */
+      @media (hover: none) {
+        .dim-card { filter: saturate(1) brightness(1); }
       }
 
       .apple-draw-text {

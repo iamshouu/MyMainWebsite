@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import {
   SOCIAL_LINKS,
   PROJECTS_DATA,
@@ -33,8 +33,6 @@ import {
   ChevronDown, 
   FolderCode, 
   ArrowLeft, 
-  Volume,
-  Volume1,
   Volume2,
   VolumeX,
   MonitorPlay,
@@ -95,7 +93,7 @@ const MENTORSHIP_COPY: Record<
       'Mentorship is a way to learn trading as effectively and safely as possible for your capital: you get full support from day one to your first results, a clear learning structure, and an individual approach.',
     asideTitle: 'At a glance',
     asideLines: [
-      'One-on-one dialogue — not recorded lectures',
+      'Dialogues',
       'Homework',
       'Individual approach',
     ],
@@ -145,7 +143,7 @@ const MENTORSHIP_COPY: Record<
       'Менторшип — это не групповой курс, где ты теряешься среди десятков студентов. Здесь ты в приоритете: каждое занятие, каждый разбор, каждая обратная связь — только про тебя. Ты получишь сопровождение на всём пути от нулевых знаний до первого стабильного результата, индивидуальную программу под твой уровень.',
     asideTitle: 'Кратко',
     asideLines: [
-      'Диалоги один на один, не записанные лекции',
+      'Диалоги',
       'Домашка',
       'Индивидуальный подход',
     ],
@@ -239,18 +237,101 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 
 const ROADMAP_ICONS = [MonitorPlay, Users, GraduationCap, Building2] as const;
 
+type ViewMode = 'main' | 'projects' | 'performance' | 'mentorship';
+
 const App: React.FC = () => {
-  const [viewMode, setViewMode] = useState<'main' | 'projects' | 'performance' | 'mentorship'>('main');
+  // Lazy init from sessionStorage — preserves which overlay was open
+  // across a page reload. sessionStorage (not localStorage) so a brand-
+  // new tab still defaults to 'main'.
+  const [viewMode, setViewMode] = useState<ViewMode>(() => {
+    try {
+      const v = sessionStorage.getItem('viewMode');
+      if (v === 'mentorship' || v === 'performance' || v === 'projects' || v === 'main') {
+        return v;
+      }
+    } catch {
+      /* private mode / storage disabled — fall through */
+    }
+    return 'main';
+  });
   const [mainSiteLocale, setMainSiteLocale] = useState<UiLocale>('en');
   const [mentorshipLocale, setMentorshipLocale] = useState<UiLocale>('en');
   const [isMuted, setIsMuted] = useState(false);
-  // Quiet default — first level of the cycle, very gentle on entry
-  const [volume, setVolume] = useState(0.03);
+  // Fixed background volume — soft enough to feel ambient, audible if attended
+  const [volume] = useState(0.05);
   const [hasInteracted, setHasInteracted] = useState(false);
   const [performanceAnimReady, setPerformanceAnimReady] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
   const heroContentRef = useRef<HTMLDivElement>(null);
+
+  // Persist current viewMode so a reload re-opens the same overlay.
+  useEffect(() => {
+    try {
+      sessionStorage.setItem('viewMode', viewMode);
+    } catch {
+      /* storage disabled — silently ignore */
+    }
+  }, [viewMode]);
+
+  // Persist main scroll position (throttled via rAF). The DOM keeps
+  // scrollTop while the container is just `hidden`, but a hard reload
+  // wipes it — sessionStorage bridges that.
+  useEffect(() => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    let scheduled = false;
+    const save = () => {
+      scheduled = false;
+      try {
+        sessionStorage.setItem('mainScroll', String(el.scrollTop));
+      } catch {
+        /* noop */
+      }
+    };
+    const onScroll = () => {
+      if (scheduled) return;
+      scheduled = true;
+      requestAnimationFrame(save);
+    };
+    el.addEventListener('scroll', onScroll, { passive: true });
+    return () => el.removeEventListener('scroll', onScroll);
+  }, []);
+
+  // Restore main scroll position. Runs on mount + whenever viewMode
+  // becomes 'main' (e.g. coming back from an overlay) — both cases
+  // benefit from explicitly reseating scrollTop in case content height
+  // changed. Retries via rAF for up to ~1s while content lays out.
+  useLayoutEffect(() => {
+    if (viewMode !== 'main') return;
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    let target = 0;
+    try {
+      target = Number(sessionStorage.getItem('mainScroll') || 0);
+    } catch {
+      return;
+    }
+    if (!target) return;
+    let attempts = 0;
+    let rafId = 0;
+    const tryRestore = () => {
+      const max = el.scrollHeight - el.clientHeight;
+      if (max >= target) {
+        el.scrollTop = target;
+        return;
+      }
+      if (attempts++ < 60) {
+        rafId = requestAnimationFrame(tryRestore);
+      } else {
+        el.scrollTop = Math.max(0, max);
+      }
+    };
+    tryRestore();
+    return () => {
+      if (rafId) cancelAnimationFrame(rafId);
+    };
+  }, [viewMode]);
 
   useEffect(() => {
     if (viewMode === 'performance') {
@@ -322,24 +403,9 @@ const App: React.FC = () => {
     setIsMuted(!isMuted);
   };
 
-  // Discrete volume levels, ascending from very-quiet to loud-ish
-  const VOLUME_LEVELS = [0.03, 0.12, 0.35, 0.7] as const;
-
-  const cycleVolume = () => {
+  const toggleAudio = () => {
     if (!hasInteracted) setHasInteracted(true);
-    if (isMuted || volume <= 0) {
-      // Was muted → first audible level
-      setIsMuted(false);
-      setVolume(VOLUME_LEVELS[0]);
-      return;
-    }
-    const currentIdx = VOLUME_LEVELS.findIndex((l) => Math.abs(l - volume) < 0.005);
-    if (currentIdx === -1 || currentIdx === VOLUME_LEVELS.length - 1) {
-      // Custom volume or already at the loudest level → mute
-      setIsMuted(true);
-      return;
-    }
-    setVolume(VOLUME_LEVELS[currentIdx + 1]);
+    setIsMuted((m) => !m);
   };
 
   const handleNavigation = (id: string) => {
@@ -496,34 +562,37 @@ const App: React.FC = () => {
         <div className="flex flex-col gap-3 md:gap-4 pointer-events-auto">
           <button
             type="button"
-            onClick={cycleVolume}
+            onClick={toggleAudio}
             className="group flex items-center gap-2.5 md:gap-3 pl-3 pr-3.5 md:pl-3.5 md:pr-4 py-2 md:py-2.5 bg-white/[0.04] hover:bg-white/[0.09] backdrop-blur-xl rounded-full border border-white/10 hover:border-white/25 transition-all shadow-[0_8px_30px_rgba(0,0,0,0.45)]"
-            aria-label={isMuted || volume === 0 ? 'Volume muted, click to unmute' : `Volume level ${VOLUME_LEVELS.findIndex((l) => Math.abs(l - volume) < 0.005) + 1} of ${VOLUME_LEVELS.length}, click to cycle`}
-            title="Click to change volume"
+            aria-label={isMuted ? 'Audio muted, click to unmute' : 'Audio playing, click to mute'}
+            title={isMuted ? 'Unmute' : 'Mute'}
           >
-            {isMuted || volume === 0 ? (
+            {isMuted ? (
               <VolumeX size={14} className="text-white/40 group-hover:text-white/70 transition-colors md:w-4 md:h-4" />
-            ) : volume < 0.08 ? (
-              <Volume size={14} className="text-white md:w-4 md:h-4" />
-            ) : volume < 0.25 ? (
-              <Volume1 size={14} className="text-white md:w-4 md:h-4" />
             ) : (
               <Volume2 size={14} className="text-white md:w-4 md:h-4" />
             )}
 
-            {/* Bar visualizer — ascending heights, lit white when level reached */}
+            {/* Bar visualizer — pulses like an equalizer when playing,
+                static dim bars with an X (icon already toggles) when muted. */}
             <span className="flex items-end gap-[3px] md:gap-1 h-4 md:h-[18px]" aria-hidden>
-              {VOLUME_LEVELS.map((lvl, i) => {
-                const isOn = !isMuted && volume >= lvl - 0.005;
+              {[0, 1, 2, 3].map((i) => {
+                const baseHeight = 5 + i * 3; // 5 / 8 / 11 / 14 px
                 return (
                   <span
                     key={i}
-                    className="w-[2.5px] md:w-[3px] rounded-full transition-all duration-300 ease-out"
+                    className="w-[2.5px] md:w-[3px] rounded-full"
                     style={{
-                      height: `${5 + i * 3}px`,
-                      background: isOn ? '#fff' : 'rgba(255,255,255,0.18)',
-                      boxShadow: isOn ? '0 0 8px rgba(255,255,255,0.45)' : 'none',
-                      transitionDelay: `${i * 40}ms`,
+                      height: `${baseHeight}px`,
+                      background: isMuted ? 'rgba(255,255,255,0.18)' : '#fff',
+                      boxShadow: isMuted ? 'none' : '0 0 8px rgba(255,255,255,0.45)',
+                      transformOrigin: 'bottom',
+                      transition: 'background 300ms ease-out, box-shadow 300ms ease-out',
+                      // Each bar gets its own duration + delay so the wave
+                      // looks organic, not robotic.
+                      animation: isMuted
+                        ? 'none'
+                        : `equalizer-bar ${(0.7 + i * 0.13).toFixed(2)}s ease-in-out ${(i * 0.08).toFixed(2)}s infinite`,
                     }}
                   />
                 );

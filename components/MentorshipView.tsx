@@ -1,5 +1,5 @@
-import React, { useEffect, useRef } from 'react';
-import { ArrowLeft, Send, Sparkle } from 'lucide-react';
+import React, { useEffect, useLayoutEffect, useRef } from 'react';
+import { ArrowLeft, Send, Sparkles } from 'lucide-react';
 import InfiniteGridBackground from './InfiniteGridBackground';
 import { GooeyText } from './GooeyText';
 import type { UiLocale } from '../constants';
@@ -41,17 +41,38 @@ interface MentorshipViewProps {
   telegramUrl: string;
 }
 
-// Per-pillar accent palette
-const PILLAR_ACCENTS: { hex: string; soft: string; glow: string; border: string }[] = [
-  { hex: '#C7A6FF', soft: 'rgba(199, 166, 255, 0.4)', glow: 'rgba(199, 166, 255, 0.18)', border: 'rgba(199, 166, 255, 0.32)' }, // violet
-  { hex: '#5BC2D6', soft: 'rgba(91, 194, 214, 0.4)', glow: 'rgba(91, 194, 214, 0.18)', border: 'rgba(91, 194, 214, 0.32)' }, // cyan/teal
-  { hex: '#7FB7FF', soft: 'rgba(127, 183, 255, 0.4)', glow: 'rgba(127, 183, 255, 0.18)', border: 'rgba(127, 183, 255, 0.32)' }, // sky
-  { hex: '#7DD3A1', soft: 'rgba(125, 211, 161, 0.4)', glow: 'rgba(125, 211, 161, 0.18)', border: 'rgba(125, 211, 161, 0.32)' }, // emerald
+// Per-pillar accent palette — palette mirrors the reference (violet,
+// emerald, cyan, pink). Each entry exposes:
+//   hex    → opaque accent color (icon glyph, glow seed)
+//   tint   → translucent fill used for the glass background + icon-tile
+//   glow   → diffuse halo around card and behind glyphs
+//   soft   → divider/edge accents
+//   border → subtle accent on the outer border (kept faint; main border is white-ish)
+type Accent = { hex: string; soft: string; glow: string; border: string; tint: string };
+// Hero card takes violet (matches the reference photo's leading wide tile).
+// The 4 small cards cycle through the remaining colors so the hero never
+// collides chromatically with the tile directly under it.
+const HERO_ACCENT: Accent = {
+  hex: '#C7A6FF', tint: 'rgba(199, 166, 255, 0.30)', soft: 'rgba(199, 166, 255, 0.45)', glow: 'rgba(199, 166, 255, 0.4)', border: 'rgba(199, 166, 255, 0.45)',
+};
+const PILLAR_ACCENTS: Accent[] = [
+  { hex: '#4ADE80', tint: 'rgba(74, 222, 128, 0.26)',  soft: 'rgba(74, 222, 128, 0.45)',  glow: 'rgba(74, 222, 128, 0.35)',  border: 'rgba(74, 222, 128, 0.4)' },    // emerald
+  { hex: '#5BD7E8', tint: 'rgba(91, 215, 232, 0.26)',  soft: 'rgba(91, 215, 232, 0.45)',  glow: 'rgba(91, 215, 232, 0.35)',  border: 'rgba(91, 215, 232, 0.4)' },    // cyan
+  { hex: '#FBBF24', tint: 'rgba(251, 191, 36, 0.26)',  soft: 'rgba(251, 191, 36, 0.45)',  glow: 'rgba(251, 191, 36, 0.35)',  border: 'rgba(251, 191, 36, 0.4)' },    // amber
+  { hex: '#F472B6', tint: 'rgba(244, 114, 182, 0.26)', soft: 'rgba(244, 114, 182, 0.45)', glow: 'rgba(244, 114, 182, 0.35)', border: 'rgba(244, 114, 182, 0.4)' },   // pink
 ];
 
-const HIDDEN_TZ = -1500;
-const HIDDEN_BLUR = 12;
-const HIDDEN_ROT_X = -18;
+// Chrome background ornaments per small card — matched to feature theme:
+//   0 emerald (Personal program)   → document
+//   1 cyan    (Full support)       → compass
+//   2 amber   (Online conferences) → speech bubble
+//   3 pink    (Flexible format)    → heart + audio waveform
+const PILLAR_IMAGES: string[] = [
+  '/images/card-program-document.png',
+  '/images/card-support-compass.png',
+  '/images/card-conferences-bubble.png',
+  '/images/card-flexible-waveform.png',
+];
 
 // Splits the title into per-letter spans with staggered "rise" animation.
 // Re-keys on text change so the animation re-fires on locale switch.
@@ -87,85 +108,6 @@ const MentorshipView: React.FC<MentorshipViewProps> = ({
 }) => {
   const overlayRef = useRef<HTMLDivElement>(null);
   const pillarsRef = useRef<HTMLElement>(null);
-  const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const headerRef = useRef<HTMLDivElement>(null);
-  const watermarkRef = useRef<HTMLHeadingElement>(null);
-
-  // Pillars depth-emerge driven by overlay scroll position
-  useEffect(() => {
-    const overlay = overlayRef.current;
-    const pillars = pillarsRef.current;
-    if (!overlay || !pillars) return;
-
-    let scheduled = false;
-    const update = () => {
-      scheduled = false;
-      const vh = window.innerHeight;
-      const rect = pillars.getBoundingClientRect();
-      const sectionTop = rect.top;
-      const sectionHeight = rect.height;
-
-      const intro = Math.max(0, Math.min(1, 1 - sectionTop / vh));
-      const pinnedRange = Math.max(1, sectionHeight - vh);
-      const stackProgress = Math.max(0, Math.min(1, -sectionTop / pinnedRange));
-
-      if (watermarkRef.current) {
-        const w = watermarkRef.current;
-        w.style.opacity = String(intro * 0.06);
-        const ty = (1 - intro) * 30;
-        const scale = 0.94 + intro * 0.06;
-        w.style.transform = `translate(-50%, ${ty}px) scale(${scale})`;
-      }
-
-      if (headerRef.current) {
-        const h = headerRef.current;
-        h.style.opacity = String(intro);
-        const ty = (1 - intro) * 36;
-        h.style.transform = `translateY(${ty}px)`;
-      }
-
-      const total = features.length;
-      cardRefs.current.forEach((card, idx) => {
-        if (!card) return;
-        let cp: number;
-        if (idx === 0) {
-          cp = intro;
-        } else if (total > 1) {
-          const chunk = 1 / (total - 1);
-          const start = (idx - 1) * chunk;
-          const end = idx * chunk;
-          cp = Math.max(0, Math.min(1, (stackProgress - start) / (end - start)));
-        } else {
-          cp = 1;
-        }
-        const eased = 1 - Math.pow(1 - cp, 3);
-        const z = HIDDEN_TZ * (1 - eased);
-        const rotX = HIDDEN_ROT_X * (1 - eased);
-        const blur = HIDDEN_BLUR * (1 - eased);
-        card.style.transform = `translate3d(0,0,${z.toFixed(1)}px) rotateX(${rotX.toFixed(2)}deg)`;
-        card.style.opacity = cp.toFixed(3);
-        card.style.filter = blur > 0.1 ? `blur(${blur.toFixed(1)}px)` : 'none';
-      });
-    };
-
-    const onScroll = () => {
-      if (scheduled) return;
-      scheduled = true;
-      requestAnimationFrame(update);
-    };
-
-    overlay.addEventListener('scroll', onScroll, { passive: true });
-    update();
-    const onResize = () => update();
-    window.addEventListener('resize', onResize);
-    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(() => update()) : null;
-    ro?.observe(pillars);
-    return () => {
-      overlay.removeEventListener('scroll', onScroll);
-      window.removeEventListener('resize', onResize);
-      ro?.disconnect();
-    };
-  }, [features.length]);
 
   // Generic reveal-on-scroll for elements with .reveal-rise class
   useEffect(() => {
@@ -203,10 +145,65 @@ const MentorshipView: React.FC<MentorshipViewProps> = ({
     return () => observer.disconnect();
   }, [locale]);
 
-  // Reset overlay scroll to top when locale changes (new content layout)
+  // Persist overlay scroll position across reloads + locale switches.
+  // The previous behavior forcibly reset scrollTop to 0 on every locale
+  // change, which teleported users to the top mid-read — removed.
+  // Save (throttled via rAF) on every scroll event.
   useEffect(() => {
-    if (overlayRef.current) overlayRef.current.scrollTop = 0;
-  }, [locale]);
+    const overlay = overlayRef.current;
+    if (!overlay) return;
+    let scheduled = false;
+    const save = () => {
+      scheduled = false;
+      try {
+        sessionStorage.setItem('mentorshipScroll', String(overlay.scrollTop));
+      } catch {
+        /* storage quota / privacy mode — silently ignore */
+      }
+    };
+    const onScroll = () => {
+      if (scheduled) return;
+      scheduled = true;
+      requestAnimationFrame(save);
+    };
+    overlay.addEventListener('scroll', onScroll, { passive: true });
+    return () => overlay.removeEventListener('scroll', onScroll);
+  }, []);
+
+  // Restore overlay scroll on mount. Uses useLayoutEffect to write
+  // scrollTop before paint. Retries up to ~1s via rAF in case content
+  // (heavy sections) hasn't laid out tall enough yet to accept the
+  // saved scrollTop.
+  useLayoutEffect(() => {
+    const overlay = overlayRef.current;
+    if (!overlay) return;
+    let target = 0;
+    try {
+      target = Number(sessionStorage.getItem('mentorshipScroll') || 0);
+    } catch {
+      return;
+    }
+    if (!target) return;
+    let attempts = 0;
+    let rafId = 0;
+    const tryRestore = () => {
+      const max = overlay.scrollHeight - overlay.clientHeight;
+      if (max >= target) {
+        overlay.scrollTop = target;
+        return;
+      }
+      if (attempts++ < 60) {
+        rafId = requestAnimationFrame(tryRestore);
+      } else {
+        // Content never grew tall enough — land at the furthest valid point
+        overlay.scrollTop = Math.max(0, max);
+      }
+    };
+    tryRestore();
+    return () => {
+      if (rafId) cancelAnimationFrame(rafId);
+    };
+  }, []);
 
   return (
     <div
@@ -264,27 +261,7 @@ const MentorshipView: React.FC<MentorshipViewProps> = ({
       {/* Hero stage */}
       <section className="relative z-10 min-h-[100dvh] flex flex-col items-center justify-center px-4 md:px-12 lg:px-20 py-16 md:py-24">
         <div className="w-full max-w-4xl text-center">
-          {/* Eyebrow badges */}
-          <div className="flex flex-wrap items-center justify-center gap-2 mb-6 md:mb-8 reveal-rise" style={{ transitionDelay: '60ms' }}>
-            <span
-              className={`inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.04] px-3 py-1 font-mono text-[9px] md:text-[10px] text-white/75 backdrop-blur-sm ${
-                isRu ? 'tracking-wide' : 'uppercase tracking-[0.25em]'
-              }`}
-            >
-              <Sparkle size={10} className="text-white/55" />
-              {copy.badge1}
-            </span>
-            <span
-              className={`inline-flex items-center rounded-full border border-white/10 bg-white/[0.02] px-3 py-1 font-mono text-[9px] md:text-[10px] text-white/45 backdrop-blur-sm ${
-                isRu ? 'tracking-wide' : 'uppercase tracking-[0.2em]'
-              }`}
-            >
-              {copy.badge2}
-            </span>
-          </div>
-
-          {/* Title — gooey morphing through related concepts; rises into view
-              like the other hero elements (200ms after the badges) */}
+          {/* Title — gooey morphing through related concepts; rises into view */}
           <h1
             className="mb-5 md:mb-7 reveal-rise"
             aria-label={copy.title}
@@ -321,18 +298,48 @@ const MentorshipView: React.FC<MentorshipViewProps> = ({
             {copy.heroBody}
           </p>
 
-          {/* TL;DR pills */}
-          <div className="mt-10 md:mt-12 grid grid-cols-1 sm:grid-cols-3 gap-2.5 md:gap-3 max-w-3xl mx-auto">
-            {copy.asideLines.map((line, i) => (
-              <div
-                key={line}
-                className="reveal-rise rounded-2xl border border-white/12 bg-white/[0.04] backdrop-blur-md px-4 py-3 text-left flex items-start gap-2.5"
-                style={{ transitionDelay: `${720 + i * 100}ms` }}
-              >
-                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-white/60 shadow-[0_0_8px_rgba(255,255,255,0.5)]" />
-                <span className="text-[13px] md:text-[14px] leading-relaxed text-white/82">{line}</span>
-              </div>
-            ))}
+          {/* TL;DR row — three key tags joined by accented slashes,
+              flanked by gradient lines for an editorial feel. The slashes
+              pick up the red palette of the mentorship section. */}
+          <div
+            className="reveal-rise mt-10 md:mt-14 flex flex-wrap items-center justify-center gap-3 md:gap-5"
+            style={{ transitionDelay: '720ms' }}
+          >
+            <span
+              aria-hidden
+              className="hidden sm:block h-[1px] w-10 md:w-16 bg-gradient-to-r from-transparent to-white/25"
+            />
+            <div className="flex items-center gap-2.5 md:gap-4">
+              {copy.asideLines.map((line, i) => (
+                <React.Fragment key={line}>
+                  {i > 0 && (
+                    <span
+                      aria-hidden
+                      className="font-mono font-light text-base md:text-xl translate-y-[-1px]"
+                      style={{
+                        color: 'rgba(239, 68, 68, 0.8)',
+                        textShadow: '0 0 12px rgba(239, 68, 68, 0.45)',
+                      }}
+                    >
+                      /
+                    </span>
+                  )}
+                  <span
+                    className={`font-mono text-[10px] md:text-[12px] text-white/80 ${
+                      isRu
+                        ? 'tracking-[0.18em] md:tracking-[0.22em]'
+                        : 'uppercase tracking-[0.25em] md:tracking-[0.32em]'
+                    }`}
+                  >
+                    {line}
+                  </span>
+                </React.Fragment>
+              ))}
+            </div>
+            <span
+              aria-hidden
+              className="hidden sm:block h-[1px] w-10 md:w-16 bg-gradient-to-l from-transparent to-white/25"
+            />
           </div>
         </div>
 
@@ -345,120 +352,76 @@ const MentorshipView: React.FC<MentorshipViewProps> = ({
         </div>
       </section>
 
-      {/* Pillars stage — sticky depth */}
-      <section ref={pillarsRef} className="relative w-full z-10">
-        {features.map((_, idx) => (
-          <div key={`pillar-spacer-${idx}`} aria-hidden className="h-[100dvh]" />
-        ))}
+      {/* Pillars stage — liquid-glass grid (reference photo style).
+          justify-start (not center) so the header always sits below the
+          watermark in document order; the large pt on the section gives
+          the watermark its own breathing room above the header. */}
+      <section
+        ref={pillarsRef}
+        className="relative z-10 min-h-[100dvh] flex flex-col items-center justify-start px-4 md:px-12 lg:px-20 pt-32 md:pt-48 pb-20 md:pb-28 overflow-hidden"
+      >
+        {/* Watermark behind the grid — centered via inset-x + text-align.
+            We deliberately AVOID translate-x-1/2 because reveal-rise
+            applies its own `transform: translateY(...)`, and a second
+            transform on the same element would wipe out the horizontal
+            offset, drifting the text to the right on enter. Sized down
+            on desktop to keep clear of the section header below. */}
+        <h2
+          aria-hidden
+          className="reveal-rise absolute top-6 md:top-12 inset-x-0 select-none pointer-events-none text-center whitespace-nowrap font-black uppercase tracking-tighter text-white text-4xl md:text-8xl opacity-[0.06]"
+        >
+          {isRu ? 'Преимущества' : 'Advantages'}
+        </h2>
 
-        <div className="absolute inset-0 pointer-events-none">
-          <div
-            className="sticky top-0 left-0 w-full h-[100dvh] flex flex-col items-center justify-center pointer-events-auto px-4 md:px-12 lg:px-20 py-10 overflow-hidden"
-            style={{ perspective: '1400px', perspectiveOrigin: 'center 45%' }}
+        {/* Section header */}
+        <div className="reveal-rise relative z-10 flex flex-col items-center mb-10 md:mb-14">
+          <p
+            className={`font-mono text-[10px] md:text-[12px] mb-3 text-white/85 drop-shadow-[0_0_15px_rgba(255,255,255,0.4)] ${
+              isRu ? 'tracking-[0.5em]' : 'uppercase tracking-[0.6em]'
+            }`}
           >
-            {/* Watermark */}
-            <h2
-              ref={watermarkRef}
-              aria-hidden
-              className="absolute top-6 md:top-12 left-1/2 select-none pointer-events-none w-full text-center whitespace-nowrap font-black uppercase tracking-tighter text-white text-5xl md:text-[10rem]"
-              style={{
-                opacity: 0,
-                transform: 'translate(-50%, 30px) scale(0.94)',
-                willChange: 'transform, opacity',
-              }}
-            >
-              {isRu ? 'Преимущества' : 'Advantages'}
-            </h2>
+            {copy.sectionTitle}
+          </p>
+          <div className="h-[1px] w-24 md:w-44 bg-white/40 shadow-[0_0_10px_rgba(255,255,255,0.3)]" />
+        </div>
 
-            {/* Section header */}
-            <div
-              ref={headerRef}
-              className="relative z-10 flex flex-col items-center mb-8 md:mb-12"
-              style={{ opacity: 0, transform: 'translateY(36px)', willChange: 'transform, opacity' }}
-            >
-              <p
-                className={`font-mono text-[10px] md:text-[12px] mb-3 text-white/85 drop-shadow-[0_0_15px_rgba(255,255,255,0.4)] ${
-                  isRu ? 'tracking-[0.5em]' : 'uppercase tracking-[0.6em]'
-                }`}
-              >
-                {copy.sectionTitle}
-              </p>
-              <div className="h-[1px] w-24 md:w-44 bg-white/40 shadow-[0_0_10px_rgba(255,255,255,0.3)]" />
-            </div>
-
-            {/* Card grid */}
-            <div
-              className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-5 w-full max-w-6xl px-2 md:px-4 relative z-10"
-              style={{ transformStyle: 'preserve-3d' }}
-            >
-              {features.map((feat, idx) => {
-                const Icon = feat.CustomIcon;
-                const accent = PILLAR_ACCENTS[idx % PILLAR_ACCENTS.length];
-                const data = copy.features[idx] || { title: '', desc: '' };
-                return (
-                  <div
-                    key={feat.step}
-                    ref={(el) => { cardRefs.current[idx] = el; }}
-                    className="relative"
-                    style={{
-                      transform: `translate3d(0,0,${HIDDEN_TZ}px) rotateX(${HIDDEN_ROT_X}deg)`,
-                      opacity: 0,
-                      filter: `blur(${HIDDEN_BLUR}px)`,
-                      willChange: 'transform, opacity, filter',
-                      transformStyle: 'preserve-3d',
-                    }}
-                    aria-hidden={idx > 0}
-                  >
-                    <div
-                      className="group relative h-full rounded-2xl md:rounded-3xl border bg-black/55 backdrop-blur-xl p-5 md:p-7 flex flex-col gap-3 transition-colors duration-500"
-                      style={{
-                        borderColor: accent.border,
-                        boxShadow: `0 24px 60px ${accent.glow}, inset 0 1px 0 rgba(255,255,255,0.05)`,
-                      }}
-                    >
-                      <span
-                        className="absolute top-0 left-6 right-6 h-[1px]"
-                        style={{ background: `linear-gradient(90deg, transparent, ${accent.soft}, transparent)` }}
-                        aria-hidden
-                      />
-                      <span
-                        className="absolute -top-12 left-1/2 -translate-x-1/2 w-32 h-20 rounded-full blur-3xl pointer-events-none"
-                        style={{ background: accent.glow }}
-                        aria-hidden
-                      />
-
-                      <div className="flex items-center justify-between gap-3">
-                        <span
-                          className="font-mono text-xl md:text-2xl font-black leading-none tabular-nums tracking-[0.12em]"
-                          style={{ color: accent.hex, opacity: 0.6 }}
-                        >
-                          {feat.step}
-                        </span>
-                        <div
-                          className="flex h-10 w-10 md:h-12 md:w-12 items-center justify-center rounded-xl border ring-2 ring-black/55"
-                          style={{
-                            borderColor: accent.border,
-                            background: `linear-gradient(135deg, ${accent.glow}, rgba(0,0,0,0.6))`,
-                            color: accent.hex,
-                          }}
-                        >
-                          <Icon className="h-6 w-6 md:h-7 md:w-7" />
-                        </div>
-                      </div>
-                      <h3
-                        className="text-base md:text-lg font-bold text-white leading-snug tracking-tight"
-                      >
-                        {data.title}
-                      </h3>
-                      <p className="text-[12px] md:text-[14px] leading-relaxed text-white/65">
-                        {data.desc}
-                      </p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+        {/* Grid — 1 wide hero card on top spanning full row, then a 2×2
+            of the four pillar cards below. The hero card carries the
+            program's headline pitch; the four smaller tiles are the
+            individual advantages. */}
+        <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 gap-3.5 md:gap-5 w-full max-w-2xl">
+          {/* Hero — col-span-2 on sm+ */}
+          <div className="sm:col-span-2">
+            <GlassCard
+              step="00"
+              title={isRu ? '1 ‑ на ‑ 1 с реальным трейдером' : '1 ‑ on ‑ 1 with a real trader'}
+              accent={HERO_ACCENT}
+              Icon={Sparkles}
+              isRu={isRu}
+              revealDelayMs={0}
+              isHero
+              tagLabel={isRu ? 'ГЛАВНОЕ' : 'FEATURED'}
+              bgImage="/images/card-hero-sparkle.png"
+            />
           </div>
+
+          {/* 4 pillar tiles — each with a themed chrome ornament */}
+          {features.map((feat, idx) => {
+            const accent = PILLAR_ACCENTS[idx % PILLAR_ACCENTS.length];
+            const data = copy.features[idx] || { title: '', desc: '' };
+            return (
+              <GlassCard
+                key={feat.step}
+                step={feat.step}
+                title={data.title}
+                accent={accent}
+                Icon={feat.CustomIcon}
+                isRu={isRu}
+                revealDelayMs={(idx + 1) * 110}
+                bgImage={PILLAR_IMAGES[idx]}
+              />
+            );
+          })}
         </div>
       </section>
 
@@ -505,8 +468,10 @@ const MentorshipView: React.FC<MentorshipViewProps> = ({
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="relative z-10 min-h-[100dvh] flex items-center px-4 md:px-12 lg:px-20 py-16 md:py-24">
+      {/* CTA — sized to content (no forced 100dvh) so it sits naturally
+          right after the results section. The inner card is centred via
+          its own mx-auto, not via a flex parent. */}
+      <section className="relative z-10 px-4 md:px-12 lg:px-20 pt-8 md:pt-12 pb-20 md:pb-28">
         <div
           className="reveal-rise relative w-full max-w-3xl mx-auto rounded-3xl border border-white/15 bg-gradient-to-br from-black/65 via-black/45 to-black/65 p-7 md:p-12 overflow-hidden shadow-[0_24px_80px_rgba(0,0,0,0.5)]"
         >
@@ -566,5 +531,315 @@ const MentorshipView: React.FC<MentorshipViewProps> = ({
     </div>
   );
 };
+
+/* ────────────────────────────────────────────────────────────────────────
+   GlassCard — liquid-glass tile patterned after the reference photo:
+     • Translucent colored fill + backdrop-blur produce the frosted look
+     • Top row: small icon tile (left), three tiny dots (center), info "i"
+       (right)
+     • Background ornament: same icon, oversized and faded on the right
+       edge, acts as a colored halo motif
+     • Bottom row: bold title, "▶ STEP NN" tag (replaces "PLAY"), arrow
+   ────────────────────────────────────────────────────────────────────────*/
+
+interface GlassCardProps {
+  step: string;
+  title: string;
+  accent: Accent;
+  Icon: React.ComponentType<{ className?: string }>;
+  isRu: boolean;
+  revealDelayMs?: number;
+  /** Hero variant — wider grid cell, larger title and ornament. */
+  isHero?: boolean;
+  /** Override the bottom tag (default "STEP {step}" / "ШАГ {step}"). */
+  tagLabel?: string;
+  /**
+   * Optional decorative image (chrome/glass artwork on black background).
+   * When provided, REPLACES the SVG icon ornament on the right side.
+   * Composited via mix-blend-mode: screen, so the source must have a pure
+   * black backdrop — the black drops out and only the bright glass edges
+   * remain, floating over the accent-tinted card.
+   */
+  bgImage?: string;
+}
+
+const GlassCard: React.FC<GlassCardProps> = ({
+  step,
+  title,
+  accent,
+  Icon,
+  isRu,
+  revealDelayMs = 0,
+  isHero = false,
+  tagLabel,
+  bgImage,
+}) => (
+  <div
+    className={`reveal-rise dim-card group relative overflow-hidden rounded-[22px] border p-4 md:p-6 flex flex-col justify-between ${
+      isHero ? 'min-h-[180px] md:min-h-[215px]' : 'min-h-[170px] md:min-h-[205px]'
+    }`}
+    style={{
+      transitionDelay: `${revealDelayMs}ms`,
+      borderColor: 'rgba(255,255,255,0.18)',
+      background: `linear-gradient(135deg, ${accent.tint} 0%, rgba(255,255,255,0.04) 70%)`,
+      backdropFilter: 'blur(28px) saturate(160%)',
+      WebkitBackdropFilter: 'blur(28px) saturate(160%)',
+      boxShadow: [
+        'inset 0 1px 0 0 rgba(255,255,255,0.45)',
+        'inset 0 -1px 0 0 rgba(0,0,0,0.32)',
+        '0 24px 60px rgba(0,0,0,0.5)',
+        `0 0 60px ${accent.glow}`,
+      ].join(', '),
+    }}
+  >
+    {/* Specular diagonal sheen */}
+    <span
+      aria-hidden
+      className="pointer-events-none absolute inset-0"
+      style={{
+        background:
+          'linear-gradient(135deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.04) 24%, transparent 50%)',
+        mixBlendMode: 'overlay',
+      }}
+    />
+
+    {/* Background ornament — either a custom chrome PNG (transparent
+        background) or the SVG icon fallback. Slight blur softens the
+        edges so the ornament feels integrated with the glass surface
+        rather than sticker-pasted. */}
+    {bgImage ? (
+      <img
+        src={bgImage}
+        alt=""
+        aria-hidden
+        className={`pointer-events-none select-none absolute right-0 top-1/2 -translate-y-1/2 h-[110%] w-auto object-contain object-right ${
+          isHero ? 'max-w-[42%]' : 'max-w-[55%]'
+        }`}
+        style={{
+          filter: 'blur(2.5px)',
+          opacity: 0.9,
+        }}
+      />
+    ) : (
+      <span
+        aria-hidden
+        className="pointer-events-none absolute -right-6 top-1/2 -translate-y-1/2"
+        style={{ color: accent.hex, opacity: 0.28, filter: 'blur(1.5px)' }}
+      >
+        <Icon className={isHero ? 'w-44 h-44 md:w-60 md:h-60' : 'w-36 h-36 md:w-48 md:h-48'} />
+      </span>
+    )}
+
+    {/* Top row: status pill · dots · info button.
+        The status pill REPLACES the old colored icon tile — it's a
+        glass-styled accent-colored chip with a pulsing dot inside.
+        Hero shows "PRO", the four pillars show their step number. */}
+    <div className="relative flex items-start justify-between gap-3">
+      {/* Status pill */}
+      <div
+        className="relative inline-flex items-center gap-2 rounded-full px-2.5 md:px-3 py-1 md:py-1.5 shrink-0"
+        style={{
+          background: `linear-gradient(135deg, ${accent.tint} 0%, rgba(255,255,255,0.04) 100%)`,
+          border: `1px solid ${accent.border}`,
+          boxShadow: [
+            'inset 0 1px 0 0 rgba(255,255,255,0.3)',
+            `0 0 16px ${accent.glow}`,
+          ].join(', '),
+        }}
+      >
+        {/* Pulse dot — animated halo + solid core, accent color */}
+        <span className="relative flex h-1.5 w-1.5 md:h-2 md:w-2" aria-hidden>
+          <span
+            className="absolute inline-flex h-full w-full rounded-full opacity-80 animate-ping"
+            style={{ background: accent.hex }}
+          />
+          <span
+            className="relative inline-flex h-1.5 w-1.5 md:h-2 md:w-2 rounded-full"
+            style={{ background: accent.hex, boxShadow: `0 0 8px ${accent.hex}` }}
+          />
+        </span>
+        {/* Label */}
+        <span
+          className="font-mono text-[9px] md:text-[10px] tracking-[0.22em] uppercase font-semibold leading-none"
+          style={{ color: accent.hex, textShadow: `0 0 10px ${accent.glow}` }}
+        >
+          {isHero ? 'PRO' : step}
+        </span>
+      </div>
+
+      {/* Decorative dots — three small dots in a row near the top center */}
+      <div className="flex items-center gap-1 mt-3" aria-hidden>
+        <span className="h-[3px] w-[3px] rounded-full bg-white/40" />
+        <span className="h-[3px] w-[3px] rounded-full bg-white/40" />
+        <span className="h-[3px] w-[3px] rounded-full bg-white/40" />
+      </div>
+
+      {/* Info pill */}
+      <span
+        aria-hidden
+        className="flex items-center justify-center w-6 h-6 md:w-7 md:h-7 rounded-full border border-white/25 bg-white/[0.06] text-white/70 shrink-0"
+      >
+        <span className="font-serif italic text-[11px] md:text-[12px] leading-none translate-y-[-0.5px]">i</span>
+      </span>
+    </div>
+
+    {/* Bottom: title · STEP tag · arrow */}
+    <div className="relative">
+      <h3
+        className={`font-black text-white tracking-tight leading-tight mb-2.5 ${
+          isHero ? 'text-xl md:text-[1.75rem]' : 'text-lg md:text-xl'
+        }`}
+        style={{ textShadow: '0 2px 10px rgba(0,0,0,0.45)' }}
+      >
+        {title}
+      </h3>
+      <div className="flex items-center justify-between">
+        <span className="inline-flex items-center gap-1.5 font-bold text-[10px] md:text-[11px] tracking-[0.22em] uppercase text-white">
+          <svg width="9" height="9" viewBox="0 0 8 8" fill="currentColor" aria-hidden>
+            <path d="M1 0v8l7-4z" />
+          </svg>
+          {tagLabel ?? `${isRu ? 'ШАГ' : 'STEP'} ${step}`}
+        </span>
+        <span
+          aria-hidden
+          className="inline-flex items-center justify-center text-[11px] md:text-[12px] text-white/55 group-hover:text-white/85 transition-colors"
+        >
+          →
+        </span>
+      </div>
+    </div>
+  </div>
+);
+
+// Legacy ModuleCard kept for reference / future use; not rendered.
+// Wrapped in a no-op IIFE assignment so TS doesn't warn about the function
+// being unused at consumer level.
+interface ModuleCardProps {
+  step: string;
+  total: number;
+  title: string;
+  desc: string;
+  accent: Accent;
+}
+const ModuleCard: React.FC<ModuleCardProps> = ({ step, total, title, desc, accent }) => {
+  const totalStr = String(total).padStart(2, '0');
+  return (
+    <div
+      className="group relative h-full rounded-xl md:rounded-2xl overflow-hidden border bg-black/70 backdrop-blur-xl shadow-[0_24px_60px_rgba(0,0,0,0.45)] transition-colors duration-500 hover:bg-black/80"
+      style={{ borderColor: accent.border }}
+    >
+      {/* Vertical accent stripe down the left edge */}
+      <span
+        className="absolute inset-y-0 left-0 w-[3px]"
+        style={{ background: `linear-gradient(180deg, ${accent.soft} 0%, transparent 85%)` }}
+        aria-hidden
+      />
+      {/* Soft accent glow top-right corner */}
+      <span
+        className="absolute -top-20 -right-12 h-40 w-40 rounded-full blur-3xl pointer-events-none opacity-60"
+        style={{ background: accent.glow }}
+        aria-hidden
+      />
+
+      {/* Watermark step number — large italic faded numeral filling the
+          bottom-right corner. Replaces the "// 02" marker with a more
+          editorial, architectural identifier. */}
+      <span
+        className="absolute -right-2 -bottom-6 md:-right-4 md:-bottom-10 font-black italic select-none pointer-events-none leading-none tracking-tighter"
+        style={{
+          fontSize: 'clamp(7rem, 16vw, 12rem)',
+          color: 'rgba(255,255,255,0.045)',
+          fontFamily: 'Outfit, sans-serif',
+        }}
+        aria-hidden
+      >
+        {step}
+      </span>
+
+      <div className="relative h-full p-5 md:p-7 flex flex-col">
+        {/* TOP — thin line + step label */}
+        <div className="flex items-center gap-3">
+          <span className="h-[1px] w-6 md:w-10" style={{ background: accent.soft }} aria-hidden />
+          <span
+            className="font-mono text-[10px] md:text-[11px] uppercase tracking-[0.3em] md:tracking-[0.36em]"
+            style={{ color: accent.hex, opacity: 0.85 }}
+          >
+            Step {step}
+          </span>
+        </div>
+
+        {/* MIDDLE — title + bar + description, distributed in the centre */}
+        <div className="flex-1 flex flex-col justify-center my-5 md:my-7">
+          <h3 className="text-lg md:text-2xl font-bold text-white tracking-tight leading-[1.15] mb-3 md:mb-4">
+            {title}
+          </h3>
+          <span
+            className="block h-[2px] w-12 md:w-14 mb-3 md:mb-4 rounded-full"
+            style={{ background: accent.hex }}
+            aria-hidden
+          />
+          <p className="text-[13px] md:text-[15px] leading-relaxed text-white/65">
+            {desc}
+          </p>
+        </div>
+
+        {/* BOTTOM — divider + progress counter + arrow */}
+        <div
+          className="flex items-center justify-between gap-3 pt-3 md:pt-4 border-t"
+          style={{ borderColor: 'rgba(255,255,255,0.07)' }}
+        >
+          <span className="font-mono text-[9px] md:text-[10px] tracking-[0.3em] uppercase text-white/35">
+            {step} <span className="text-white/15">/</span> {totalStr}
+          </span>
+          <span
+            className="font-mono text-base md:text-lg leading-none transition-transform duration-500 group-hover:translate-x-1"
+            style={{ color: accent.hex, opacity: 0.7 }}
+            aria-hidden
+          >
+            →
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const SkeletonCard: React.FC = () => (
+  <div className="absolute inset-0 rounded-xl md:rounded-2xl border border-white/[0.07] bg-white/[0.012] overflow-hidden" aria-hidden>
+    {/* Faint vertical stripe matching the real card's accent placement */}
+    <span className="absolute inset-y-4 left-0 w-[2px] bg-white/[0.05]" />
+
+    {/* Architectural corner markers */}
+    <span className="absolute top-2 left-2 h-2 w-2 border-t border-l border-white/10" />
+    <span className="absolute top-2 right-2 h-2 w-2 border-t border-r border-white/10" />
+    <span className="absolute bottom-2 left-2 h-2 w-2 border-b border-l border-white/10" />
+    <span className="absolute bottom-2 right-2 h-2 w-2 border-b border-r border-white/10" />
+
+    {/* Placeholder content — mirrors the new layout (top label, centred
+        title+bar+desc, bottom divider + footer) */}
+    <div className="absolute inset-0 p-5 md:p-7 flex flex-col">
+      {/* top label placeholder */}
+      <div className="flex items-center gap-3">
+        <span className="h-[1px] w-6 md:w-10 bg-white/[0.06]" />
+        <span className="h-1.5 w-16 rounded-full bg-white/[0.06]" />
+      </div>
+
+      {/* middle — title + bar + 3-line desc placeholders */}
+      <div className="flex-1 flex flex-col justify-center my-5 md:my-7">
+        <span className="block h-4 md:h-5 w-3/4 rounded-full bg-white/[0.07] mb-3 md:mb-4" />
+        <span className="block h-[2px] w-12 md:w-14 bg-white/[0.07] rounded-full mb-3 md:mb-4" />
+        <span className="block h-2 w-full rounded-full bg-white/[0.04] mb-1.5" />
+        <span className="block h-2 w-11/12 rounded-full bg-white/[0.04] mb-1.5" />
+        <span className="block h-2 w-3/4 rounded-full bg-white/[0.04]" />
+      </div>
+
+      {/* bottom — divider + footer placeholders */}
+      <div className="flex items-center justify-between gap-3 pt-3 md:pt-4 border-t border-white/[0.05]">
+        <span className="h-1.5 w-12 rounded-full bg-white/[0.05]" />
+        <span className="h-2 w-3 rounded-full bg-white/[0.05]" />
+      </div>
+    </div>
+  </div>
+);
 
 export default MentorshipView;
