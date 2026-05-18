@@ -1,0 +1,76 @@
+# Builds the Vite app and publishes dist/ to GitHub Pages on every push to main.
+# Uses the modern GitHub Pages deployment action — artifact-based, no gh-pages
+# branch needed.
+#
+# Before this works, enable Pages in the repo:
+#   Settings → Pages → Build and deployment → Source: GitHub Actions
+#
+# Live URL after first successful run:
+#   https://iamshouu.github.io/Website/
+
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Minimum permissions for the Pages deployment to work.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow one concurrent deploy. Newer runs don't kill older ones in flight —
+# they queue, so the latest commit always lands as the final published version.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      # `npm install` rather than `npm ci` — the lockfile has some legacy
+      # duplicate entries (vite 6 & 7, plugin-react in both deps + devDeps)
+      # which would make `npm ci` fail its strict consistency check.
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Build
+        run: npm run build
+
+      # SPA fallback — GitHub Pages serves 404.html for any path it can't
+      # find. By cloning index.html into 404.html, deep links / hard
+      # refreshes on any non-existent path still boot the SPA, which can
+      # then handle the route client-side (or just render the home view).
+      - name: SPA fallback
+        run: cp dist/index.html dist/404.html
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
