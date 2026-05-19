@@ -11,13 +11,14 @@ export default defineConfig(({ mode, command }) => {
   const apiKey = env.VITE_API_KEY || env.API_KEY || '';
 
   return {
-    // Dev: base "/" — иначе Vite HMR WebSocket рвётся.
-    // Production: base "/Website/" — GitHub Pages раздаёт сайт по пути
-    //   https://iamshouu.github.io/Website/, и все ассеты должны
-    //   резолвиться от этого префикса (/Website/assets/...).
-    //   Если позже подключим кастомный домен (shouuu.ru) с сайтом на
-    //   корне — поменяем обратно на "/" и добавим public/CNAME.
-    base: command === 'build' ? '/Website/' : '/',
+    // base "/" и в dev, и в prod — теперь сайт раздаётся с кастомного
+    // домена shouuu.ru, где он лежит в корне (а не в подпути /Website/
+    // как было на iamshouu.github.io/Website/).
+    //
+    // public/CNAME с содержимым "shouuu.ru" подсказывает GitHub Pages
+    // привязать сайт к кастомному домену. Пути к ассетам в TS-коде
+    // через import.meta.env.BASE_URL подстраиваются автоматически.
+    base: '/',
     plugins: [react()],
     define: {
       // We inject the found key into the app so it's accessible via process.env.API_KEY
