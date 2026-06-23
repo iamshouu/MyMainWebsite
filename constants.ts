@@ -54,12 +54,17 @@ export const MAIN_SITE_COPY: Record<
     navMentorship: string;
     navPerformance: string;
     navArchive: string;
+    projectTagline: string;
+    projectDescription: string;
+    projectTags: string[];
+    projectCta: string;
     experienceTitle: string;
     experienceTelegramHint: string;
     experienceAsideAria: string;
     scrollToExperienceAria: string;
     aboutMeWatermark: string;
     aboutMeSubtitle: string;
+    aboutMeBio: string;
     roadmapWatermark: string;
     roadmapSubtitle: string;
     roadmapSoonBadge: string;
@@ -77,38 +82,44 @@ export const MAIN_SITE_COPY: Record<
     credo: 'Discipline, patience, risk management, self-control, distance',
     navMentorship: 'Mentorship',
     navPerformance: 'Performance',
-    navArchive: 'Archive',
+    navArchive: 'My Projects',
+    projectTagline: 'Trading journal',
+    projectDescription:
+      'My main project — a trading journal for traders. Turns scattered trades into clear statistics: trade log, analytics, calendar and performance review in one place.',
+    projectTags: ['Trade log', 'Analytics', 'Calendar', 'Review'],
+    projectCta: 'Open',
     experienceTitle: 'EXPERIENCE',
     experienceTelegramHint: 'Search Telegram for the username to open the chat.',
     experienceAsideAria: 'Telegram contact',
     scrollToExperienceAria: 'Scroll to about me section',
     aboutMeWatermark: 'About Me',
     aboutMeSubtitle: 'Background & Trading Profile',
-    roadmapWatermark: 'Future Plans',
-    roadmapSubtitle: 'System Evolution Roadmap',
+    aboutMeBio:
+      "I trade professionally and understand what really drives results. Over two years of active practice I've built what matters most — discipline and patience, a solid grasp of risk management, control over myself, and the realization that results come only over the long run.",
+    roadmapWatermark: 'Plans',
+    roadmapSubtitle: 'My development roadmap',
     roadmapSoonBadge: 'SOON',
     roadmapPlans: [
       {
-        title: 'Content Quality',
-        desc: 'Implement stable market reviews, conduct backtests, and scale educational content production.',
-        status: 'In Progress',
+        title: 'Self & Content',
+        desc: 'Growing as a trader, publishing consistently and putting my name out there.',
+        status: 'Now',
+        isHighlight: true,
       },
       {
-        title: 'Mentorship 1/1',
-        desc: 'Personalized coaching on trading methodologies for maximum progress and deep market understanding.',
-        status: 'Active',
+        title: 'Mentorship',
+        desc: 'Launching personal one-on-one mentoring.',
+        status: 'Next',
       },
       {
         title: 'Trading School',
-        desc: 'A comprehensive school for beginners: systematic approach to learning and capital protection strategies.',
-        status: 'Developing',
+        desc: 'Opening a structured school for beginners.',
+        status: 'Planned',
       },
       {
         title: 'Offline Office',
-        desc: 'Opening a physical workspace for collaborative trading and knowledge sharing. Coming soon.',
-        status: 'Soon',
-        isSoon: true,
-        isHighlight: true,
+        desc: 'Opening a physical space for the team to work together.',
+        status: 'Planned',
       },
     ],
     connectWatermark: 'CONTACT',
@@ -116,20 +127,15 @@ export const MAIN_SITE_COPY: Record<
     footerRights: 'All rights reserved',
     stats: [
       {
-        label: 'Experience',
-        value: '2+ Years',
-        description: 'Active market participation and system development',
-      },
-      {
         variant: 'markets',
         label: 'Markets',
-        description: 'Deep focus on high-liquidity crypto, FX, and index instruments',
+        description: 'High-liquidity crypto, FX and index instruments',
         segments: ['Crypto', 'Forex', 'Indices'],
       },
       {
-        label: 'Strategy',
-        value: 'Smart Money + PA',
-        description: 'Technical analysis through institutional flow',
+        label: 'Approach',
+        value: 'Smart Money + Price Action',
+        description: 'Reading the market through institutional order flow',
       },
     ],
   },
@@ -140,38 +146,44 @@ export const MAIN_SITE_COPY: Record<
     credo: 'Дисциплина, терпение, риск-менеджмент, самоконтроль, дистанция',
     navMentorship: 'Менторство',
     navPerformance: 'Статистика',
-    navArchive: 'Архив',
+    navArchive: 'Мои проекты',
+    projectTagline: 'Торговый журнал',
+    projectDescription:
+      'Мой основной проект — торговый журнал для трейдеров. Превращает хаотичные сделки в понятную статистику: журнал сделок, аналитика, календарь и разбор результатов в одном месте.',
+    projectTags: ['Журнал сделок', 'Аналитика', 'Календарь', 'Разбор'],
+    projectCta: 'Открыть',
     experienceTitle: 'ОПЫТ',
     experienceTelegramHint: 'В поиске Telegram введи юзернейм — откроется чат.',
     experienceAsideAria: 'Контакт в Telegram',
     scrollToExperienceAria: 'Перейти к секции «Обо мне»',
     aboutMeWatermark: 'Обо мне',
     aboutMeSubtitle: 'Профиль и торговая практика',
+    aboutMeBio:
+      'Я профессионально занимаюсь трейдингом и понимаю суть торговли. За два года активной практики я выработал то, что и определяет результат: дисциплину и терпение, понимание риск-менеджмента, контроль над собой и осознание, что результат приходит на дистанции.',
     roadmapWatermark: 'Планы',
-    roadmapSubtitle: 'Дорожная карта развития системы',
+    roadmapSubtitle: 'Моя дорожная карта развития',
     roadmapSoonBadge: 'СКОРО',
     roadmapPlans: [
       {
-        title: 'Качество контента',
-        desc: 'Стабильные обзоры рынка, бэктесты и масштабирование образовательного контента.',
-        status: 'В работе',
+        title: 'Работа над собой и контентом',
+        desc: 'Расту как трейдер, стабильно делаю контент и заявляю о себе.',
+        status: 'Сейчас',
+        isHighlight: true,
       },
       {
-        title: 'Менторство 1/1',
-        desc: 'Персональное сопровождение по методологиям трейдинга для роста и глубокого понимания рынка.',
-        status: 'Активно',
+        title: 'Менторство',
+        desc: 'Запускаю персональное сопровождение один на один.',
+        status: 'Дальше',
       },
       {
         title: 'Школа трейдинга',
-        desc: 'Системная программа для начинающих: обучение и защита капитала.',
-        status: 'В разработке',
+        desc: 'Открываю системную школу для начинающих.',
+        status: 'В планах',
       },
       {
         title: 'Офлайн-офис',
-        desc: 'Физическое пространство для совместной работы и обмена опытом. Скоро.',
-        status: 'Скоро',
-        isSoon: true,
-        isHighlight: true,
+        desc: 'Открываю физическое пространство для команды.',
+        status: 'В планах',
       },
     ],
     connectWatermark: 'КОНТАКТЫ',
@@ -179,20 +191,15 @@ export const MAIN_SITE_COPY: Record<
     footerRights: 'Все права защищены',
     stats: [
       {
-        label: 'Опыт',
-        value: '2+ года',
-        description: 'Активное участие на рынке и развитие системы',
-      },
-      {
         variant: 'markets',
         label: 'Рынки',
-        description: 'Фокус на высоколиквидных крипто, FX и индексах',
+        description: 'Высоколиквидные крипто, FX и индексы',
         segments: ['Крипто', 'Форекс', 'Индексы'],
       },
       {
-        label: 'Стратегия',
-        value: 'Smart Money + PA',
-        description: 'Технический анализ через институциональный поток',
+        label: 'Подход',
+        value: 'Smart Money + Price Action',
+        description: 'Читаю рынок через институциональный поток',
       },
     ],
   },
@@ -303,6 +310,9 @@ export const PERFORMANCE_DATA = [
   { date: '18 Apr', value: 13.55 },
   { date: '22 Apr', value: 13.55 },
   { date: '28 Apr', value: 16.15 },
+  { date: '13 May', value: 16.15 },
+  { date: '21 May', value: 15.85 },
+  { date: '26 May', value: 15.85 },
 ];
 
 export const MONTHLY_PERFORMANCE_DATA = [
@@ -310,7 +320,7 @@ export const MONTHLY_PERFORMANCE_DATA = [
   { month: 'Feb', value: 1.15, hasData: true, trades: 8 },
   { month: 'Mar', value: -4.7, hasData: true, trades: 6 },
   { month: 'Apr', value: 3.9, hasData: true, trades: 7 },
-  { month: 'May', value: 0, hasData: false, trades: 0 },
+  { month: 'May', value: -0.30, hasData: true, trades: 3 },
   { month: 'Jun', value: 0, hasData: false, trades: 0 },
   { month: 'Jul', value: 0, hasData: false, trades: 0 },
   { month: 'Aug', value: 0, hasData: false, trades: 0 },

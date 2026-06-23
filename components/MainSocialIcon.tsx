@@ -63,8 +63,8 @@ const MainSocialIcon: React.FC<MainSocialIconProps> = ({ link, index }) => {
           className="text-white/60 group-hover:text-white group-hover:scale-110 transition-all duration-500 md:w-[32px] md:h-[32px]" 
           style={{ filter: `drop-shadow(0 0 10px ${color}44)` }}
         />
-        {/* Tiny brand tag - Increased size and font weight for readability */}
-        <span className="text-[8px] md:text-[10px] font-mono font-bold opacity-0 group-hover:opacity-100 transition-all duration-300 tracking-[0.2em] uppercase text-white truncate w-full text-center px-2">
+        {/* Brand tag - always visible, brightens on hover to match the icon */}
+        <span className="text-[8px] md:text-[10px] font-mono font-bold transition-all duration-300 tracking-[0.2em] uppercase text-white/60 group-hover:text-white truncate w-full text-center px-2">
           {link.name}
         </span>
       </div>

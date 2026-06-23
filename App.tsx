@@ -2,7 +2,6 @@
 import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import {
   SOCIAL_LINKS,
-  PROJECTS_DATA,
   MEDIA_CONFIG,
   MAIN_SITE_COPY,
   PERFORMANCE_DATA,
@@ -13,7 +12,6 @@ import {
 import type { UiLocale } from './constants';
 import Section from './components/Section';
 import SocialCard from './components/SocialCard';
-import ProjectCard from './components/ProjectCard';
 import CustomCursor from './components/CustomCursor';
 import Sparkles from './components/Sparkles';
 import MainSocialIcon from './components/MainSocialIcon';
@@ -30,9 +28,10 @@ import PerformanceAmbientBackground from './components/PerformanceAmbientBackgro
 import ArchiveAmbientBackground from './components/ArchiveAmbientBackground';
 import InfiniteGridBackground from './components/InfiniteGridBackground';
 import { 
-  ChevronDown, 
-  FolderCode, 
-  ArrowLeft, 
+  ChevronDown,
+  FolderCode,
+  ArrowLeft,
+  ArrowUpRight,
   Volume2,
   VolumeX,
   MonitorPlay,
@@ -260,7 +259,6 @@ const App: React.FC = () => {
   // Fixed background volume — soft enough to feel ambient, audible if attended
   const [volume] = useState(0.05);
   const [hasInteracted, setHasInteracted] = useState(false);
-  const [performanceAnimReady, setPerformanceAnimReady] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
   const heroContentRef = useRef<HTMLDivElement>(null);
@@ -331,18 +329,6 @@ const App: React.FC = () => {
     return () => {
       if (rafId) cancelAnimationFrame(rafId);
     };
-  }, [viewMode]);
-
-  useEffect(() => {
-    if (viewMode === 'performance') {
-      const timer = setTimeout(() => setPerformanceAnimReady(true), 1500);
-      return () => {
-        clearTimeout(timer);
-        setPerformanceAnimReady(false);
-      };
-    } else {
-      setPerformanceAnimReady(false);
-    }
   }, [viewMode]);
 
   useEffect(() => {
@@ -545,14 +531,6 @@ const App: React.FC = () => {
         svg:focus {
           outline: none !important;
         }
-        @keyframes trace-letter {
-          0% { stroke-dashoffset: 150; }
-          100% { stroke-dashoffset: -2000; }
-        }
-        .trace-letter {
-          stroke-dasharray: 150 2000;
-          animation: trace-letter 25s linear infinite;
-        }
       `}</style>
 
       <audio ref={audioRef} src={MEDIA_CONFIG.audioUrl} loop />
@@ -703,13 +681,13 @@ const App: React.FC = () => {
         <AboutMe
           watermark={homeT.aboutMeWatermark}
           subtitle={homeT.aboutMeSubtitle}
+          bio={homeT.aboutMeBio}
           stats={homeT.stats}
         />
 
         <Roadmap
           watermark={homeT.roadmapWatermark}
           subtitle={homeT.roadmapSubtitle}
-          soonBadge={homeT.roadmapSoonBadge}
           plans={homeT.roadmapPlans}
           icons={ROADMAP_ICONS}
         />
@@ -759,11 +737,41 @@ const App: React.FC = () => {
                 <ArrowLeft size={16} className="group-hover:-translate-x-2 transition-transform md:w-[18px]" />
                 <span className="font-mono tracking-widest text-[8px] md:text-[10px]">BACK TO TERMINAL</span>
               </button>
-              <h2 className="text-5xl md:text-[10rem] font-black mb-8 md:mb-16 tracking-tighter opacity-5 select-none uppercase pointer-events-none">Archive</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-12 pb-20">
-                {PROJECTS_DATA.map((project) => (
-                  <ProjectCard key={project.id} project={project} />
-                ))}
+              <h2 className="text-5xl md:text-[10rem] font-black mb-8 md:mb-16 tracking-tighter opacity-5 select-none uppercase pointer-events-none">{homeT.navArchive}</h2>
+
+              {/* Featured project — X-Perience (no card) */}
+              <div className="max-w-3xl pb-20">
+                <span className="inline-block px-2.5 py-1 border border-white/20 rounded text-[8px] md:text-[9px] font-mono uppercase tracking-[0.3em] text-white/70 mb-6">
+                  Beta
+                </span>
+                <h3 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter text-white leading-none">
+                  X-Perience
+                </h3>
+                <p className="mt-4 font-mono text-[12px] md:text-sm uppercase tracking-[0.3em] text-white/50">
+                  {homeT.projectTagline}
+                </p>
+                <p className="mt-7 text-base md:text-lg text-white/65 font-medium leading-relaxed max-w-2xl">
+                  {homeT.projectDescription}
+                </p>
+                <div className="mt-7 flex flex-wrap gap-2">
+                  {homeT.projectTags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="text-[10px] font-mono uppercase tracking-wide text-white/45 border border-white/10 px-2.5 py-1 rounded"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+                <a
+                  href="https://xperienceone.ru"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-10 inline-flex items-center gap-2 px-7 py-4 bg-white text-black rounded-2xl text-[11px] md:text-[12px] font-bold uppercase tracking-widest hover:bg-white/90 transition-colors"
+                >
+                  {homeT.projectCta} X-Perience
+                  <ArrowUpRight size={16} />
+                </a>
               </div>
             </div>
           </div>
@@ -804,26 +812,11 @@ const App: React.FC = () => {
              
              <div className="relative w-full h-[60px] md:h-[160px] mb-8 md:mb-16 select-none pointer-events-none">
                <svg className="w-full h-full overflow-visible">
-                 {/* Background faint outline */}
-                 <text x="0" y="50%" dominantBaseline="central" textAnchor="start" 
+                 <text x="0" y="50%" dominantBaseline="central" textAnchor="start"
                        className="text-5xl md:text-[10rem] font-black tracking-tighter uppercase"
-                       fill="transparent" stroke="rgba(255,255,255,0.2)" strokeWidth="1"
+                       fill="transparent" stroke="rgba(255,255,255,0.3)" strokeWidth="1.5"
                        style={{ fontFamily: 'Inter, sans-serif' }}>
-                   {"PERFORMANCE".split('').map((char, i) => (
-                     <tspan key={`bg-${i}`}>{char}</tspan>
-                   ))}
-                 </text>
-
-                 {/* Animated glowing outline per letter */}
-                 <text x="0" y="50%" dominantBaseline="central" textAnchor="start" 
-                       className={`text-5xl md:text-[10rem] font-black tracking-tighter uppercase transition-opacity duration-[3000ms] ${performanceAnimReady ? 'opacity-100' : 'opacity-0'}`}
-                       fill="transparent" stroke="rgba(255,255,255,0.9)" strokeWidth="2"
-                       style={{ fontFamily: 'Inter, sans-serif' }}>
-                   {"PERFORMANCE".split('').map((char, i) => (
-                     <tspan key={`fg-${i}`} className="trace-letter" style={{ animationDelay: `${-10 + i * 0.8}s` }}>
-                       {char}
-                     </tspan>
-                   ))}
+                   PERFORMANCE
                  </text>
                </svg>
              </div>
@@ -850,7 +843,7 @@ const App: React.FC = () => {
                   </div>
                   <div className="text-right flex flex-col items-end">
                     <div className="flex items-center gap-2 md:gap-3">
-                      <p className="text-2xl md:text-4xl font-black tracking-tighter text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">+16.15%</p>
+                      <p className="text-2xl md:text-4xl font-black tracking-tighter text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">+15.85%</p>
                       <span className="bg-white/10 text-white/80 text-[8px] md:text-[10px] font-mono px-2 py-1 rounded-md uppercase tracking-wider border border-white/10">1Y</span>
                     </div>
                     <p className="text-[11px] md:text-[13px] font-mono text-white/60 uppercase tracking-widest mt-1 md:mt-2">Total Growth (Last Year)</p>
@@ -1094,9 +1087,6 @@ const App: React.FC = () => {
         </div>
       )}
 
-      <div className="fixed bottom-4 right-4 md:bottom-8 md:right-8 z-[100] opacity-60 text-[8px] md:text-[9px] font-mono tracking-[0.3em] md:tracking-[0.5em] pointer-events-none uppercase text-white/90">
-        shou.trade // b02
-      </div>
     </div>
   );
 };
