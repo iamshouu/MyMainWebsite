@@ -13,10 +13,10 @@ import type { UiLocale } from './constants';
 import Section from './components/Section';
 import SocialCard from './components/SocialCard';
 import CustomCursor from './components/CustomCursor';
-import Sparkles from './components/Sparkles';
 import MainSocialIcon from './components/MainSocialIcon';
 import HeroHeadline from './components/HeroHeadline';
 import AboutMe from './components/AboutMe';
+import SelectedWork from './components/SelectedWork';
 import Roadmap from './components/Roadmap';
 import MentorshipView from './components/MentorshipView';
 import MentorshipAmbientBackground from './components/MentorshipAmbientBackground';
@@ -201,6 +201,7 @@ const performanceWithDrawdown = (() => {
 const maxProfit = Math.max(...performanceWithDrawdown.map(d => d.value));
 const maxDrawdown = Math.min(...performanceWithDrawdown.map(d => d.drawdown));
 const maxDrawdownPoint = performanceWithDrawdown.find(d => d.drawdown === maxDrawdown);
+const totalGrowth = PERFORMANCE_DATA[PERFORMANCE_DATA.length - 1]?.value ?? 0;
 
 const filteredMonthlyData = (() => {
   const lastIndexWithData = [...MONTHLY_PERFORMANCE_DATA].reverse().findIndex(d => d.hasData);
@@ -651,19 +652,16 @@ const App: React.FC = () => {
             className="flex flex-col items-center text-center gap-14 md:gap-24"
             style={{ transformOrigin: 'center top', willChange: 'transform, opacity, filter' }}
           >
-            <Sparkles>
-              <div
-                className="relative group py-6 md:py-10 animate-fade-in-up"
-                style={{ animationFillMode: 'both' }}
-              >
-                <HeroHeadline />
-              </div>
-            </Sparkles>
+            <div className="relative py-6 md:py-10">
+              <HeroHeadline />
+            </div>
 
-            <div className="flex flex-wrap justify-center gap-7 md:gap-10 max-w-5xl px-4">
-              {SOCIAL_LINKS.map((link, idx) => (
-                <MainSocialIcon key={idx} link={link} index={idx} />
-              ))}
+            <div className="w-full max-w-4xl px-4">
+              <nav aria-label="Social profiles" className="grid grid-cols-3 justify-items-center gap-x-6 gap-y-10 sm:grid-cols-6 sm:gap-x-8 md:gap-x-12">
+                {SOCIAL_LINKS.map((link, idx) => (
+                  <MainSocialIcon key={link.name} link={link} index={idx} />
+                ))}
+              </nav>
             </div>
 
           </div>
@@ -685,11 +683,20 @@ const App: React.FC = () => {
           stats={homeT.stats}
         />
 
+        <SelectedWork
+          watermark={homeT.buildWatermark}
+          subtitle={homeT.buildSubtitle}
+          lead={homeT.buildLead}
+          projects={homeT.buildProjects}
+        />
+
         <Roadmap
           watermark={homeT.roadmapWatermark}
           subtitle={homeT.roadmapSubtitle}
           plans={homeT.roadmapPlans}
           icons={ROADMAP_ICONS}
+          parallelTitle={homeT.roadmapParallelTitle}
+          parallelDescription={homeT.roadmapParallelDescription}
         />
 
         <Section id="connect">
@@ -843,10 +850,12 @@ const App: React.FC = () => {
                   </div>
                   <div className="text-right flex flex-col items-end">
                     <div className="flex items-center gap-2 md:gap-3">
-                      <p className="text-2xl md:text-4xl font-black tracking-tighter text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">+15.85%</p>
-                      <span className="bg-white/10 text-white/80 text-[8px] md:text-[10px] font-mono px-2 py-1 rounded-md uppercase tracking-wider border border-white/10">1Y</span>
+                      <p className="text-2xl md:text-4xl font-black tracking-tighter text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">
+                        {totalGrowth >= 0 ? '+' : ''}{Number(totalGrowth).toFixed(2)}%
+                      </p>
+                      <span className="bg-white/10 text-white/80 text-[8px] md:text-[10px] font-mono px-2 py-1 rounded-md uppercase tracking-wider border border-white/10">YTD</span>
                     </div>
-                    <p className="text-[11px] md:text-[13px] font-mono text-white/60 uppercase tracking-widest mt-1 md:mt-2">Total Growth (Last Year)</p>
+                    <p className="text-[11px] md:text-[13px] font-mono text-white/60 uppercase tracking-widest mt-1 md:mt-2">Total Growth (YTD)</p>
                   </div>
                 </div>
 

@@ -1,5 +1,5 @@
 
-import { LucideIcon } from 'lucide-react';
+import type { IconType } from 'react-icons';
 
 export interface NavItem {
   id: string;
@@ -9,7 +9,7 @@ export interface NavItem {
 export interface SocialLinkItem {
   name: string;
   url: string;
-  icon: LucideIcon;
+  icon: IconType;
   username?: string;
 }
 

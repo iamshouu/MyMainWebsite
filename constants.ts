@@ -1,13 +1,8 @@
 
 import { NavItem, SocialLinkItem, StatItem, SkillData, ProjectItem } from './types';
-import { 
-  Send, 
-  Instagram, 
-  Youtube, 
-  Video,
-  AtSign,
-  TrendingUp
-} from 'lucide-react';
+import { FaInstagram, FaTelegramPlane, FaTiktok, FaYoutube } from 'react-icons/fa';
+import { FaThreads } from 'react-icons/fa6';
+import { SiTradingview } from 'react-icons/si';
 
 // === MEDIA CONFIG ===
 export const MEDIA_CONFIG = {
@@ -44,6 +39,15 @@ export type RoadmapPlanCopy = {
   isHighlight?: boolean;
 };
 
+export type DevelopmentProjectCopy = {
+  context: string;
+  title: string;
+  description: string;
+  meta: string;
+  cta: string;
+  url: string;
+};
+
 export const MAIN_SITE_COPY: Record<
   UiLocale,
   {
@@ -65,10 +69,16 @@ export const MAIN_SITE_COPY: Record<
     aboutMeWatermark: string;
     aboutMeSubtitle: string;
     aboutMeBio: string;
+    buildWatermark: string;
+    buildSubtitle: string;
+    buildLead: string;
+    buildProjects: DevelopmentProjectCopy[];
     roadmapWatermark: string;
     roadmapSubtitle: string;
     roadmapSoonBadge: string;
     roadmapPlans: RoadmapPlanCopy[];
+    roadmapParallelTitle: string;
+    roadmapParallelDescription: string;
     connectWatermark: string;
     footerDeveloped: string;
     footerRights: string;
@@ -93,49 +103,71 @@ export const MAIN_SITE_COPY: Record<
     experienceAsideAria: 'Telegram contact',
     scrollToExperienceAria: 'Scroll to about me section',
     aboutMeWatermark: 'About Me',
-    aboutMeSubtitle: 'Background & Trading Profile',
+    aboutMeSubtitle: 'Markets & Digital Products',
     aboutMeBio:
-      "I trade professionally and understand what really drives results. Over two years of active practice I've built what matters most — discipline and patience, a solid grasp of risk management, control over myself, and the realization that results come only over the long run.",
+      'I work in two disciplines built on the same mindset: trading and web development. Markets taught me to work with risk, data and distance. In products, I turn that systematic thinking into fast, clear tools people can actually use.',
+    buildWatermark: 'Build',
+    buildSubtitle: 'Selected Web Work',
+    buildLead: 'I build digital products from real problems — especially where markets, data and decision-making meet.',
+    buildProjects: [
+      {
+        context: 'Trading journal',
+        title: 'X-Perience',
+        description: 'A trading workspace that turns scattered trades into a repeatable review system with a journal, analytics and calendar.',
+        meta: 'Product thinking · Analytics · Interface',
+        cta: 'View live',
+        url: 'https://xperienceone.ru',
+      },
+      {
+        context: 'Personal platform',
+        title: 'shou / personal site',
+        description: 'The site you are viewing: an interactive portfolio that combines market experience, product work and motion-led frontend development.',
+        meta: 'React · TypeScript · Motion',
+        cta: 'View source',
+        url: 'https://github.com/iamshouu/MyMainWebsite',
+      },
+    ],
     roadmapWatermark: 'Plans',
-    roadmapSubtitle: 'My development roadmap',
+    roadmapSubtitle: 'From Audience to an Ecosystem',
     roadmapSoonBadge: 'SOON',
     roadmapPlans: [
       {
-        title: 'Self & Content',
-        desc: 'Growing as a trader, publishing consistently and putting my name out there.',
-        status: 'Now',
+        title: 'Content & First Audience',
+        desc: 'I am actively putting myself out there: publishing videos and educational material, and building my first engaged audience.',
+        status: 'Current stage',
         isHighlight: true,
       },
       {
         title: 'Mentorship',
-        desc: 'Launching personal one-on-one mentoring.',
-        status: 'Next',
+        desc: 'Once the first audience is formed, I introduce one-on-one mentorship and test the learning format in practice.',
+        status: 'Next stage',
       },
       {
-        title: 'Trading School',
-        desc: 'Opening a structured school for beginners.',
-        status: 'Planned',
+        title: 'Online Trading School',
+        desc: 'I turn the accumulated experience and methodology into a structured online trading school.',
+        status: 'Then',
       },
       {
-        title: 'Offline Office',
-        desc: 'Opening a physical space for the team to work together.',
-        status: 'Planned',
+        title: 'Offline Space',
+        desc: 'The online system grows into a physical space for education, community and team work.',
+        status: 'Long-term goal',
       },
     ],
+    roadmapParallelTitle: 'Products — parallel to every stage',
+    roadmapParallelDescription: 'At the same time, I keep developing X-Perience and new web tools for real trading problems.',
     connectWatermark: 'CONTACT',
     footerDeveloped: 'Developed by',
     footerRights: 'All rights reserved',
     stats: [
       {
-        variant: 'markets',
-        label: 'Markets',
-        description: 'High-liquidity crypto, FX and index instruments',
-        segments: ['Crypto', 'Forex', 'Indices'],
+        label: 'Trading',
+        value: 'Risk · Structure · Patience',
+        description: 'Decisions under uncertainty, grounded in data, discipline and a long-term view.',
       },
       {
-        label: 'Approach',
-        value: 'Smart Money + Price Action',
-        description: 'Reading the market through institutional order flow',
+        label: 'Web development',
+        value: 'React · TypeScript · Motion',
+        description: 'Interfaces and tools where structure, speed and interaction support the product idea.',
       },
     ],
   },
@@ -157,49 +189,71 @@ export const MAIN_SITE_COPY: Record<
     experienceAsideAria: 'Контакт в Telegram',
     scrollToExperienceAria: 'Перейти к секции «Обо мне»',
     aboutMeWatermark: 'Обо мне',
-    aboutMeSubtitle: 'Профиль и торговая практика',
+    aboutMeSubtitle: 'Рынки и цифровые продукты',
     aboutMeBio:
-      'Я профессионально занимаюсь трейдингом и понимаю суть торговли. За два года активной практики я выработал то, что и определяет результат: дисциплину и терпение, понимание риск-менеджмента, контроль над собой и осознание, что результат приходит на дистанции.',
+      'Я работаю в двух направлениях с одним способом мышления: трейдинге и веб-разработке. Рынок научил меня работать с риском, данными и дистанцией. В продуктах я превращаю эту системность в быстрые и понятные инструменты, которыми действительно удобно пользоваться.',
+    buildWatermark: 'Build',
+    buildSubtitle: 'Избранные веб-проекты',
+    buildLead: 'Я создаю цифровые продукты из реальных задач — особенно там, где встречаются рынки, данные и принятие решений.',
+    buildProjects: [
+      {
+        context: 'Торговый журнал',
+        title: 'X-Perience',
+        description: 'Рабочее пространство трейдера, которое превращает разрозненные сделки в систему разбора: журнал, аналитика и календарь.',
+        meta: 'Продукт · Аналитика · Интерфейс',
+        cta: 'Открыть сайт',
+        url: 'https://xperienceone.ru',
+      },
+      {
+        context: 'Личная платформа',
+        title: 'shou / personal site',
+        description: 'Сайт, который ты сейчас смотришь: интерактивное портфолио, объединяющее рынок, продуктовую работу и frontend-разработку с анимацией.',
+        meta: 'React · TypeScript · Motion',
+        cta: 'Посмотреть код',
+        url: 'https://github.com/iamshouu/MyMainWebsite',
+      },
+    ],
     roadmapWatermark: 'Планы',
-    roadmapSubtitle: 'Моя дорожная карта развития',
+    roadmapSubtitle: 'От аудитории к собственной экосистеме',
     roadmapSoonBadge: 'СКОРО',
     roadmapPlans: [
       {
-        title: 'Работа над собой и контентом',
-        desc: 'Расту как трейдер, стабильно делаю контент и заявляю о себе.',
-        status: 'Сейчас',
+        title: 'Контент и первая аудитория',
+        desc: 'Сейчас я активно заявляю о себе: публикую видео и обучающие материалы, набираю первую вовлечённую аудиторию.',
+        status: 'Текущий этап',
         isHighlight: true,
       },
       {
         title: 'Менторство',
-        desc: 'Запускаю персональное сопровождение один на один.',
-        status: 'Дальше',
+        desc: 'После формирования первой аудитории запускаю персональное сопровождение один на один и проверяю формат обучения на практике.',
+        status: 'Следующий этап',
       },
       {
-        title: 'Школа трейдинга',
-        desc: 'Открываю системную школу для начинающих.',
-        status: 'В планах',
+        title: 'Онлайн-школа трейдинга',
+        desc: 'Собираю накопленный опыт и методику в структурированную онлайн-школу трейдинга.',
+        status: 'Затем',
       },
       {
-        title: 'Офлайн-офис',
-        desc: 'Открываю физическое пространство для команды.',
-        status: 'В планах',
+        title: 'Офлайн-пространство',
+        desc: 'Развиваю онлайн-систему в физическое пространство для обучения, сообщества и совместной работы команды.',
+        status: 'Долгосрочная цель',
       },
     ],
+    roadmapParallelTitle: 'Продукты — параллельно каждому этапу',
+    roadmapParallelDescription: 'Одновременно я продолжаю развивать X-Perience и новые веб-инструменты для реальных задач трейдера.',
     connectWatermark: 'КОНТАКТЫ',
     footerDeveloped: 'Разработано',
     footerRights: 'Все права защищены',
     stats: [
       {
-        variant: 'markets',
-        label: 'Рынки',
-        description: 'Высоколиквидные крипто, FX и индексы',
-        segments: ['Крипто', 'Форекс', 'Индексы'],
+        label: 'Трейдинг',
+        value: 'Риск · Структура · Терпение',
+        description: 'Решения в условиях неопределённости, основанные на данных, дисциплине и дистанции.',
       },
       {
-        label: 'Подход',
-        value: 'Smart Money + Price Action',
-        description: 'Читаю рынок через институциональный поток',
+        label: 'Веб-разработка',
+        value: 'React · TypeScript · Motion',
+        description: 'Интерфейсы и инструменты, где структура, скорость и взаимодействие работают на идею продукта.',
       },
     ],
   },
@@ -226,12 +280,12 @@ export const SECTIONS: NavItem[] = [
 ];
 
 export const SOCIAL_LINKS: SocialLinkItem[] = [
-  { name: 'TikTok', url: 'https://www.tiktok.com/@danyashou?_r=1&_t=ZS-93swsUWH5W8', icon: Video, username: '@danyashou' },
-  { name: 'Telegram', url: 'https://t.me/Danya_shouuu', icon: Send, username: '@Danya_shouuu' },
-  { name: 'YouTube', url: 'https://www.youtube.com/@iamshouu/videos', icon: Youtube, username: '@iamshouu' },
-  { name: 'Threads', url: 'https://www.threads.com/@iamshouuuu?hl=ru', icon: AtSign, username: '@iamshouuuu' },
-  { name: 'Instagram', url: 'https://www.instagram.com/iamshouuuu/', icon: Instagram, username: '@iamshouuuu' },
-  { name: 'TradingView', url: 'https://ru.tradingview.com/u/shoouuuuu/', icon: TrendingUp, username: '@shoouuuuu' },
+  { name: 'TikTok', url: 'https://www.tiktok.com/@danyashou?_r=1&_t=ZS-93swsUWH5W8', icon: FaTiktok, username: '@danyashou' },
+  { name: 'Telegram', url: 'https://t.me/Danya_shouuu', icon: FaTelegramPlane, username: '@Danya_shouuu' },
+  { name: 'YouTube', url: 'https://www.youtube.com/@iamshouu/videos', icon: FaYoutube, username: '@iamshouu' },
+  { name: 'Threads', url: 'https://www.threads.com/@iamshouuuu?hl=ru', icon: FaThreads, username: '@iamshouuuu' },
+  { name: 'Instagram', url: 'https://www.instagram.com/iamshouuuu/', icon: FaInstagram, username: '@iamshouuuu' },
+  { name: 'TradingView', url: 'https://ru.tradingview.com/u/shoouuuuu/', icon: SiTradingview, username: '@shoouuuuu' },
 ];
 
 export const TRADING_STATS: StatItem[] = [
@@ -255,15 +309,6 @@ export const SKILL_DATA: SkillData[] = [
 ];
 
 export const PROJECTS_DATA: ProjectItem[] = [
-  {
-    id: 'fx-calculator',
-    title: 'FX Calculator',
-    description: 'Professional position calculator for Crypto, FX, Indices, and Metals. Helps calculate position size for a trade while maintaining strict risk management.',
-    tags: ['Forex', 'Risk Management', 'Calculator', 'Tools'],
-    link: 'https://www.fx-calculator.pw/',
-    imageUrl: 'https://images.unsplash.com/photo-1554224155-169641357599?q=80&w=2070&auto=format&fit=crop',
-    category: 'Trading Tool'
-  },
   {
     id: 'spectra-journal',
     title: 'Spectra Journal',
@@ -313,6 +358,8 @@ export const PERFORMANCE_DATA = [
   { date: '13 May', value: 16.15 },
   { date: '21 May', value: 15.85 },
   { date: '26 May', value: 15.85 },
+  { date: '30 Jun', value: 16.85 },
+  { date: '31 Jul', value: 18.15 },
 ];
 
 export const MONTHLY_PERFORMANCE_DATA = [
@@ -321,8 +368,8 @@ export const MONTHLY_PERFORMANCE_DATA = [
   { month: 'Mar', value: -4.7, hasData: true, trades: 6 },
   { month: 'Apr', value: 3.9, hasData: true, trades: 7 },
   { month: 'May', value: -0.30, hasData: true, trades: 3 },
-  { month: 'Jun', value: 0, hasData: false, trades: 0 },
-  { month: 'Jul', value: 0, hasData: false, trades: 0 },
+  { month: 'Jun', value: 1.0, hasData: true, trades: 9 },
+  { month: 'Jul', value: 1.3, hasData: true, trades: 2 },
   { month: 'Aug', value: 0, hasData: false, trades: 0 },
   { month: 'Sep', value: 0, hasData: false, trades: 0 },
   { month: 'Oct', value: 0, hasData: false, trades: 0 },
@@ -339,12 +386,12 @@ export const CERTIFICATES_DATA = [
 ];
 
 export const TRADING_DETAILED_STATS = [
-  { label: 'Total Trades', value: '33', type: 'neutral' },
-  { label: 'Win Rate', value: '62.1%', type: 'winrate' },
-  { label: 'Average RR', value: '1:2.10', type: 'neutral' },
-  { label: 'Profit Factor', value: '1.95', type: 'neutral' },
+  { label: 'Total Trades', value: '44', type: 'neutral' },
+  { label: 'Win Rate', value: '57%', type: 'winrate' },
+  { label: 'Average RR', value: '2.2', type: 'neutral' },
+  { label: 'Profit Factor', value: '1.31', type: 'neutral' },
   { label: 'Max Drawdown', value: '-8.3%', type: 'negative' },
   { label: 'Best Trade', value: '+6.3%', type: 'positive' },
   { label: 'Worst Trade', value: '-2.3%', type: 'negative' },
-  { label: 'Avg Holding Time', value: '7h 20m', type: 'neutral' },
+  { label: 'Avg Holding Time', value: '13h 8m', type: 'neutral' },
 ];
