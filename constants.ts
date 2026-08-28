@@ -281,8 +281,8 @@ export const SECTIONS: NavItem[] = [
 
 export const SOCIAL_LINKS: SocialLinkItem[] = [
   { name: 'TikTok', url: 'https://www.tiktok.com/@danyashou?_r=1&_t=ZS-93swsUWH5W8', icon: FaTiktok, username: '@danyashou' },
-  { name: 'Telegram', url: 'https://t.me/Danya_shouuu', icon: FaTelegramPlane, username: '@Danya_shouuu' },
-  { name: 'YouTube', url: 'https://www.youtube.com/@iamshouu/videos', icon: FaYoutube, username: '@iamshouu' },
+  { name: 'Telegram', url: 'https://t.me/Imshouu', icon: FaTelegramPlane, username: '@Imshouu' },
+  { name: 'YouTube', url: 'https://www.youtube.com/@imshouu', icon: FaYoutube, username: '@imshouu' },
   { name: 'Threads', url: 'https://www.threads.com/@iamshouuuu?hl=ru', icon: FaThreads, username: '@iamshouuuu' },
   { name: 'Instagram', url: 'https://www.instagram.com/iamshouuuu/', icon: FaInstagram, username: '@iamshouuuu' },
   { name: 'TradingView', url: 'https://ru.tradingview.com/u/shoouuuuu/', icon: SiTradingview, username: '@shoouuuuu' },

@@ -1,7 +1,6 @@
 import React, {
   Suspense,
   lazy,
-  startTransition,
   useCallback,
   useEffect,
   useLayoutEffect,
@@ -74,7 +73,7 @@ const App: React.FC = () => {
   const [viewMode, setViewMode] = useState<ViewMode>(initialView);
   const [mainSiteLocale, setMainSiteLocale] = useState<UiLocale>('en');
   const [mentorshipLocale, setMentorshipLocale] = useState<UiLocale>('en');
-  const [isMuted, setIsMuted] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
   const [hasInteracted, setHasInteracted] = useState(false);
   const [pendingView, setPendingView] = useState<Exclude<ViewMode, 'main'> | null>(null);
   const reducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)');
@@ -91,13 +90,13 @@ const App: React.FC = () => {
     (nextView: ViewMode) => {
       const update = () => setViewMode(nextView);
       const documentWithTransitions = document as PortfolioDocument;
-      if (!reducedMotion && documentWithTransitions.startViewTransition) {
+      if (!isMobile && !reducedMotion && documentWithTransitions.startViewTransition) {
         documentWithTransitions.startViewTransition(() => flushSync(update));
       } else {
-        startTransition(update);
+        update();
       }
     },
-    [reducedMotion],
+    [isMobile, reducedMotion],
   );
 
   const navigateToView = useCallback(
@@ -112,7 +111,7 @@ const App: React.FC = () => {
     [transitionToView],
   );
 
-  const openView = async (
+  const openView = (
     nextView: Exclude<ViewMode, 'main'>,
     loader: () => Promise<unknown>,
     trigger: HTMLButtonElement,
@@ -121,12 +120,27 @@ const App: React.FC = () => {
     const requestId = ++navigationRequestRef.current;
     lastTriggerRef.current = trigger;
     setPendingView(nextView);
-    try {
-      await loader();
-      if (navigationRequestRef.current === requestId) navigateToView(nextView);
-    } finally {
-      if (navigationRequestRef.current === requestId) setPendingView(null);
-    }
+
+    // Start loading the split chunk, but never block navigation on the network.
+    // Suspense provides immediate visual feedback while a cold chunk arrives.
+    void loader().then(
+      () => {
+        if (navigationRequestRef.current === requestId) setPendingView(null);
+      },
+      () => {
+        if (navigationRequestRef.current !== requestId) return;
+        setPendingView(null);
+        navigateToView('main', 'replace');
+      },
+    );
+
+    // Let the pressed state reach the compositor before mounting a heavier
+    // overlay such as the performance charts on mobile.
+    if (isMobile) {
+      requestAnimationFrame(() => {
+        if (navigationRequestRef.current === requestId) navigateToView(nextView);
+      });
+    } else navigateToView(nextView);
   };
 
   const closeView = useCallback(() => {
@@ -216,14 +230,6 @@ const App: React.FC = () => {
   }, [viewMode]);
 
   useEffect(() => {
-    if (hasInteracted) return;
-    const activate = () => setHasInteracted(true);
-    const events: (keyof WindowEventMap)[] = ['pointerdown', 'keydown', 'touchstart', 'wheel'];
-    events.forEach((eventName) => window.addEventListener(eventName, activate, { once: true, passive: true }));
-    return () => events.forEach((eventName) => window.removeEventListener(eventName, activate));
-  }, [hasInteracted]);
-
-  useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
     audio.muted = isMuted;
@@ -241,13 +247,28 @@ const App: React.FC = () => {
     const video = videoRef.current;
     if (!video) return;
     const syncPlayback = () => {
-      if (viewMode === 'main' && !reducedMotion && !document.hidden) void video.play().catch(() => undefined);
+      if (viewMode === 'main' && !reducedMotion && !isMobile && !document.hidden) void video.play().catch(() => undefined);
       else video.pause();
     };
     syncPlayback();
     document.addEventListener('visibilitychange', syncPlayback);
     return () => document.removeEventListener('visibilitychange', syncPlayback);
-  }, [reducedMotion, viewMode]);
+  }, [isMobile, reducedMotion, viewMode]);
+
+  useEffect(() => {
+    if (!isMobile) return;
+    const connection = (navigator as Navigator & {
+      connection?: { effectiveType?: string; saveData?: boolean };
+    }).connection;
+    if (connection?.saveData || connection?.effectiveType?.includes('2g')) return;
+
+    const preloadTimer = window.setTimeout(() => {
+      void loadMentorshipView();
+      void loadProjectsView();
+      void loadPerformanceView();
+    }, 800);
+    return () => window.clearTimeout(preloadTimer);
+  }, [isMobile]);
 
   useEffect(() => {
     if (viewMode !== 'main' || reducedMotion || isMobile) return;
@@ -310,11 +331,11 @@ const App: React.FC = () => {
       <div className={`pointer-events-none absolute inset-0 z-0 overflow-hidden ${viewMode === 'main' ? '' : 'hidden'}`} aria-hidden>
         <video
           ref={videoRef}
-          autoPlay={!reducedMotion}
+          autoPlay={!disableAmbientMotion}
           loop
           muted
           playsInline
-          preload="metadata"
+          preload={isMobile ? 'none' : 'metadata'}
           disablePictureInPicture
           className="h-full w-full object-cover opacity-40 grayscale"
         >
@@ -410,7 +431,7 @@ const App: React.FC = () => {
       </header>
 
       <nav
-        className="mobile-bottom-nav fixed inset-x-0 bottom-0 z-[350] grid grid-cols-3 border-t border-white/10 bg-black/80 px-2 pt-2 backdrop-blur-2xl md:hidden"
+        className="mobile-bottom-nav fixed inset-x-0 bottom-0 z-[350] grid grid-cols-3 border-t border-white/10 bg-black/[0.94] px-2 pt-2 md:hidden"
         aria-label={mainSiteLocale === 'ru' ? 'Основная навигация' : 'Primary navigation'}
       >
         {navigationItems.map(({ view, label, Icon, loader }) => {
@@ -420,12 +441,12 @@ const App: React.FC = () => {
             <button
               key={view}
               type="button"
-              onTouchStart={() => void loader()}
+              onPointerDown={() => void loader()}
               onFocus={() => void loader()}
               onClick={(event) => void openView(view, loader, event.currentTarget)}
               aria-current={isActive ? 'page' : undefined}
               aria-busy={isPending}
-              className={`relative flex min-h-14 min-w-0 flex-col items-center justify-center gap-1 px-1 py-2 text-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white/60 ${
+              className={`relative flex min-h-14 min-w-0 touch-manipulation select-none flex-col items-center justify-center gap-1 px-1 py-2 text-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white/60 ${
                 isActive ? 'text-white' : 'text-white/[0.48] active:text-white/80'
               }`}
             >
