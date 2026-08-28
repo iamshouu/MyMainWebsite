@@ -2,14 +2,8 @@
 import { GoogleGenAI } from "@google/genai";
 
 export default async function handler(req, res) {
-  // CORS Settings
-  res.setHeader('Access-Control-Allow-Credentials', true);
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
-  res.setHeader(
-    'Access-Control-Allow-Headers',
-    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
-  );
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  res.setHeader('Allow', 'POST, OPTIONS');
 
   if (req.method === 'OPTIONS') {
     res.status(200).end();
@@ -22,15 +16,33 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { messages } = req.body;
-    
-    // Initialize the SDK using the required process.env.API_KEY
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const messages = req.body?.messages;
+    if (!Array.isArray(messages) || messages.length === 0 || messages.length > 20) {
+      res.status(400).json({ error: 'Messages must be a non-empty array with at most 20 items' });
+      return;
+    }
+
+    const normalizedMessages = messages.map((message) => ({
+      role: message?.role === 'model' ? 'model' : 'user',
+      text: typeof message?.text === 'string' ? message.text.trim().slice(0, 2000) : '',
+    }));
+    if (normalizedMessages.some((message) => !message.text)) {
+      res.status(400).json({ error: 'Every message must contain text' });
+      return;
+    }
+
+    const apiKey = process.env.GEMINI_API_KEY || process.env.API_KEY;
+    if (!apiKey) {
+      res.status(503).json({ error: 'AI service is not configured' });
+      return;
+    }
+
+    const ai = new GoogleGenAI({ apiKey });
 
     // Convert message history to the format expected by the SDK
-    const contents = messages.map(msg => ({
-      role: msg.role === 'model' ? 'model' : 'user',
-      parts: [{ text: msg.text }]
+    const contents = normalizedMessages.map((message) => ({
+      role: message.role,
+      parts: [{ text: message.text }]
     }));
 
     // Use ai.models.generateContent with standard model name and prompt configuration
@@ -56,6 +68,6 @@ Your Rules:
 
   } catch (error) {
     console.error("Proxy Crash:", error);
-    res.status(500).json({ error: 'Internal proxy error', message: error.message });
+    res.status(500).json({ error: 'Internal proxy error' });
   }
 }

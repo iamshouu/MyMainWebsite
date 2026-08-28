@@ -31,6 +31,7 @@ export function GooeyText({
   textClassName = '',
   ariaLabel,
 }: GooeyTextProps) {
+  const filterId = `gooey-text-${React.useId().replace(/:/g, '')}`;
   const text1Ref = React.useRef<HTMLSpanElement>(null);
   const text2Ref = React.useRef<HTMLSpanElement>(null);
   const text1CloneRef = React.useRef<HTMLSpanElement>(null);
@@ -70,6 +71,11 @@ export function GooeyText({
     writeStyle(text2Pair, 'opacity', '100%');
     writeStyle(text1Pair, 'filter', '');
     writeStyle(text2Pair, 'filter', '');
+
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || texts.length < 2) {
+      writeText(text2Pair, texts[0] ?? '');
+      return;
+    }
 
     const setMorph = (fraction: number) => {
       const blur2 = `blur(${Math.min(8 / fraction - 8, 100)}px)`;
@@ -111,7 +117,6 @@ export function GooeyText({
     };
 
     const animate = () => {
-      raf = requestAnimationFrame(animate);
       const newTime = new Date();
       const shouldIncrementIndex = cooldown > 0;
       const dt = (newTime.getTime() - time.getTime()) / 1000;
@@ -130,11 +135,29 @@ export function GooeyText({
       } else {
         doCooldown();
       }
+      raf = requestAnimationFrame(animate);
     };
 
-    animate();
+    const stop = () => {
+      if (raf) cancelAnimationFrame(raf);
+      raf = 0;
+    };
+    const start = () => {
+      if (!document.hidden && !raf) {
+        time = new Date();
+        raf = requestAnimationFrame(animate);
+      }
+    };
+    const onVisibilityChange = () => {
+      if (document.hidden) stop();
+      else start();
+    };
+
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    start();
     return () => {
-      cancelAnimationFrame(raf);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      stop();
     };
   }, [texts, morphTime, cooldownTime]);
 
@@ -151,7 +174,7 @@ export function GooeyText({
       {/* Goo threshold filter */}
       <svg className="absolute h-0 w-0" aria-hidden="true" focusable="false">
         <defs>
-          <filter id="gooey-text-threshold" x="-12%" y="-12%" width="124%" height="124%">
+          <filter id={filterId} x="-12%" y="-12%" width="124%" height="124%">
             <feGaussianBlur in="SourceGraphic" stdDeviation="0.4" result="presmooth" />
             <feColorMatrix
               in="presmooth"
@@ -189,7 +212,7 @@ export function GooeyText({
         className={`${layerCls} pointer-events-none`}
         style={{
           ...transitionStyle,
-          filter: 'url(#gooey-text-threshold)',
+          filter: `url(#${filterId})`,
           opacity: 0,
         }}
         aria-hidden

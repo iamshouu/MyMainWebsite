@@ -5,8 +5,8 @@
 # Before this works, enable Pages in the repo:
 #   Settings → Pages → Build and deployment → Source: GitHub Actions
 #
-# Live URL after first successful run:
-#   https://iamshouu.github.io/Website/
+# Production URL:
+#   https://shouuu.ru/
 
 name: Deploy to GitHub Pages
 
@@ -40,11 +40,8 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
-      # `npm install` rather than `npm ci` — the lockfile has some legacy
-      # duplicate entries (vite 6 & 7, plugin-react in both deps + devDeps)
-      # which would make `npm ci` fail its strict consistency check.
       - name: Install dependencies
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
 
       - name: Build
         run: npm run build

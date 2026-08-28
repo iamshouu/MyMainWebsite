@@ -29,7 +29,7 @@ const SocialCard: React.FC<SocialCardProps> = ({ link }) => {
       href={link.url}
       target="_blank"
       rel="noopener noreferrer"
-      className="group relative flex flex-col md:flex-row items-start md:items-center justify-between p-5 md:p-8 rounded-[1.5rem] md:rounded-[2.5rem] bg-black/40 backdrop-blur-md border border-white/5 hover:border-white/20 transition-all duration-700 hover:bg-white/[0.02] overflow-hidden"
+      className="group relative flex min-h-[92px] flex-row items-center justify-between overflow-hidden rounded-2xl border border-white/10 bg-black/45 p-4 backdrop-blur-md transition-[border-color,background-color] active:bg-white/[0.05] md:min-h-0 md:rounded-[2.5rem] md:border-white/5 md:p-8 md:hover:border-white/20 md:hover:bg-white/[0.02]"
     >
       {/* Background Glow Effect */}
       <div 
@@ -44,7 +44,7 @@ const SocialCard: React.FC<SocialCardProps> = ({ link }) => {
         {/* Original Icon Container with Skew and Glow */}
         <div className="relative">
           <div className="absolute inset-0 bg-white/20 blur-xl rounded-full scale-0 group-hover:scale-100 transition-transform duration-700 opacity-20" />
-          <div className="relative w-14 h-14 md:w-16 md:h-16 flex items-center justify-center">
+          <div className="relative flex h-12 w-12 items-center justify-center md:h-16 md:w-16">
             {/* Hexagonal/Diamond shaped background */}
             <div className="absolute inset-0 bg-neutral-900 border border-neutral-800 rotate-45 rounded-xl group-hover:rotate-[135deg] group-hover:border-white/20 transition-all duration-700" />
             <Icon 

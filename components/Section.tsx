@@ -25,14 +25,11 @@ const Section: React.FC<SectionProps> = ({ id, children, className = '' }) => {
       }
     );
 
-    if (sectionRef.current) {
-      observer.observe(sectionRef.current);
-    }
+    const section = sectionRef.current;
+    if (section) observer.observe(section);
 
     return () => {
-      if (sectionRef.current) {
-        observer.unobserve(sectionRef.current);
-      }
+      if (section) observer.unobserve(section);
     };
   }, []);
 
@@ -40,7 +37,8 @@ const Section: React.FC<SectionProps> = ({ id, children, className = '' }) => {
     <section
       id={id}
       ref={sectionRef}
-      className={`min-h-[100dvh] w-full snap-start snap-always flex flex-col items-center justify-center relative px-4 md:px-20 py-16 md:py-12 ${/\boverflow-/.test(className) ? '' : 'overflow-hidden'} ${className}`}
+      className={`min-h-[100dvh] w-full snap-start md:snap-always flex flex-col items-center justify-center relative px-4 py-20 md:px-20 md:py-12 ${/\boverflow-/.test(className) ? '' : 'overflow-hidden'} ${className}`}
+      style={{ contentVisibility: 'auto', containIntrinsicSize: '100dvh' }}
     >
       <div
         className={`w-full flex flex-col items-center justify-center section-transition ${isActive ? 'section-active' : ''}`}

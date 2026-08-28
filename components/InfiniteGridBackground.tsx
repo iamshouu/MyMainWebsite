@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useId, useRef } from 'react';
 
 /**
  * Animated infinite-grid background.
@@ -45,12 +45,17 @@ const ACCENT_PALETTES: Record<InfiniteGridAccent, [string, string, string]> = {
 interface InfiniteGridBackgroundProps {
   className?: string;
   accent?: InfiniteGridAccent;
+  reducedMotion?: boolean;
 }
 
 const InfiniteGridBackground: React.FC<InfiniteGridBackgroundProps> = ({
   className,
   accent = 'default',
+  reducedMotion = false,
 }) => {
+  const patternId = useId().replace(/:/g, '');
+  const dimPatternId = `ig-grid-dim-${patternId}`;
+  const brightPatternId = `ig-grid-bright-${patternId}`;
   const containerRef = useRef<HTMLDivElement>(null);
   const dimPatternRef = useRef<SVGPatternElement>(null);
   const brightPatternRef = useRef<SVGPatternElement>(null);
@@ -81,12 +86,28 @@ const InfiniteGridBackground: React.FC<InfiniteGridBackgroundProps> = ({
         const my = mouseRef.current.y;
         const mask = `radial-gradient(${SPOT}px circle at ${mx.toFixed(0)}px ${my.toFixed(0)}px, black, transparent)`;
         layer.style.maskImage = mask;
-        // @ts-expect-error -- vendor-prefixed property not in typings
         layer.style.webkitMaskImage = mask;
       }
       raf = requestAnimationFrame(tick);
     };
-    raf = requestAnimationFrame(tick);
+
+    const start = () => {
+      if (!reducedMotion && !document.hidden && !raf) {
+        raf = requestAnimationFrame(tick);
+      }
+    };
+
+    const stop = () => {
+      if (raf) cancelAnimationFrame(raf);
+      raf = 0;
+    };
+
+    const onVisibilityChange = () => {
+      if (document.hidden) stop();
+      else start();
+    };
+
+    start();
 
     const onMove = (e: MouseEvent) => {
       const c = containerRef.current;
@@ -97,13 +118,15 @@ const InfiniteGridBackground: React.FC<InfiniteGridBackgroundProps> = ({
     };
     // listen on window so the mask still tracks even when pointer-events-none
     // is applied by the parent layer
-    window.addEventListener('mousemove', onMove, { passive: true });
+    if (!reducedMotion) window.addEventListener('mousemove', onMove, { passive: true });
+    document.addEventListener('visibilitychange', onVisibilityChange);
 
     return () => {
-      cancelAnimationFrame(raf);
+      stop();
       window.removeEventListener('mousemove', onMove);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
     };
-  }, []);
+  }, [reducedMotion]);
 
   return (
     <div
@@ -117,7 +140,7 @@ const InfiniteGridBackground: React.FC<InfiniteGridBackgroundProps> = ({
           <defs>
             <pattern
               ref={dimPatternRef}
-              id="ig-grid-dim"
+              id={dimPatternId}
               width="40"
               height="40"
               patternUnits="userSpaceOnUse"
@@ -127,7 +150,7 @@ const InfiniteGridBackground: React.FC<InfiniteGridBackgroundProps> = ({
               <path d="M 40 0 L 0 0 0 40" fill="none" stroke="currentColor" strokeWidth="1" />
             </pattern>
           </defs>
-          <rect width="100%" height="100%" fill="url(#ig-grid-dim)" />
+          <rect width="100%" height="100%" fill={`url(#${dimPatternId})`} />
         </svg>
       </div>
 
@@ -144,7 +167,7 @@ const InfiniteGridBackground: React.FC<InfiniteGridBackgroundProps> = ({
           <defs>
             <pattern
               ref={brightPatternRef}
-              id="ig-grid-bright"
+              id={brightPatternId}
               width="40"
               height="40"
               patternUnits="userSpaceOnUse"
@@ -154,7 +177,7 @@ const InfiniteGridBackground: React.FC<InfiniteGridBackgroundProps> = ({
               <path d="M 40 0 L 0 0 0 40" fill="none" stroke="currentColor" strokeWidth="1" />
             </pattern>
           </defs>
-          <rect width="100%" height="100%" fill="url(#ig-grid-bright)" />
+          <rect width="100%" height="100%" fill={`url(#${brightPatternId})`} />
         </svg>
       </div>
 

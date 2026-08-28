@@ -19,31 +19,41 @@ const CustomCursor: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isHovering, setIsHovering] = useState(false);
   const [isClicked, setIsClicked] = useState(false);
+  const [hasMoved, setHasMoved] = useState(false);
   
   // Refs for animation loop to avoid re-renders and loop restarts
   const mousePos = useRef({ x: 0, y: 0, realX: 0, realY: 0 });
   const isHoveringRef = useRef(false);
+  const hasMovedRef = useRef(false);
   const clickEffectsRef = useRef<ClickEffect[]>([]);
   const nextEffectId = useRef(0);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext('2d');
-    let animationId: number;
+    let animationId = 0;
+    let dpr = 1;
     
     const trail: {x: number, y: number}[] = [];
     const TRAIL_LENGTH = 6; // Reduced for sharper feel
 
     const resize = () => {
-      if (canvas) {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-      }
+      if (!canvas || !ctx) return;
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = Math.round(window.innerWidth * dpr);
+      canvas.height = Math.round(window.innerHeight * dpr);
+      canvas.style.width = `${window.innerWidth}px`;
+      canvas.style.height = `${window.innerHeight}px`;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     };
     window.addEventListener('resize', resize);
     resize();
 
     const handleMouseMove = (e: MouseEvent) => {
+      if (!hasMovedRef.current) {
+        hasMovedRef.current = true;
+        setHasMoved(true);
+      }
       mousePos.current.realX = e.clientX;
       mousePos.current.realY = e.clientY;
       
@@ -94,10 +104,11 @@ const CustomCursor: React.FC = () => {
     const handleMouseUp = () => setIsClicked(false);
 
     const render = (time: number) => {
-      animationId = requestAnimationFrame(render);
       if (!canvas || !ctx) return;
 
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
       // --- Sharp Trail ---
       mousePos.current.x = mousePos.current.realX;
@@ -177,19 +188,37 @@ const CustomCursor: React.FC = () => {
 
         return true;
       });
+
+      animationId = requestAnimationFrame(render);
+    };
+
+    const stop = () => {
+      if (animationId) cancelAnimationFrame(animationId);
+      animationId = 0;
+    };
+
+    const start = () => {
+      if (!document.hidden && !animationId) animationId = requestAnimationFrame(render);
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) stop();
+      else start();
     };
 
     window.addEventListener('mousemove', handleMouseMove, { passive: true });
     window.addEventListener('mousedown', handleMouseDown);
     window.addEventListener('mouseup', handleMouseUp);
-    animationId = requestAnimationFrame(render);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    start();
 
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mousedown', handleMouseDown);
       window.removeEventListener('mouseup', handleMouseUp);
       window.removeEventListener('resize', resize);
-      cancelAnimationFrame(animationId);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      stop();
     };
   }, []);
 
@@ -197,18 +226,18 @@ const CustomCursor: React.FC = () => {
     <>
       <canvas 
         ref={canvasRef}
-        className="pointer-events-none fixed inset-0 z-[9998] opacity-100"
+        className="custom-cursor-layer pointer-events-none fixed inset-0 z-[9998] opacity-100"
       />
       
       <div 
         ref={cursorRef}
-        className={`pointer-events-none fixed top-0 left-0 z-[9999] bg-white rounded-full flex items-center justify-center ${
+        className={`custom-cursor-layer pointer-events-none fixed top-0 left-0 z-[9999] bg-white rounded-full flex items-center justify-center ${hasMoved ? 'opacity-100' : 'opacity-0'} ${
           isHovering ? (isClicked ? 'w-8 h-8' : 'w-10 h-10') : (isClicked ? 'w-1 h-1' : 'w-2 h-2')
         }`}
         style={{ 
           willChange: 'transform',
           boxShadow: isClicked ? '0 0 20px #fff' : '0 0 10px rgba(255,255,255,0.5)',
-          transition: 'width 0.1s ease-out, height 0.1s ease-out, box-shadow 0.1s ease-out' // Only transit size, not position
+          transition: 'width 0.1s ease-out, height 0.1s ease-out, box-shadow 0.1s ease-out, opacity 0.1s ease-out'
         }}
       >
         {isHovering && (

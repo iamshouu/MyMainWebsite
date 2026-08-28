@@ -2,7 +2,12 @@ import React, { useEffect, useLayoutEffect, useRef } from 'react';
 import { ArrowLeft, Send, Sparkles } from 'lucide-react';
 import InfiniteGridBackground from './InfiniteGridBackground';
 import { GooeyText } from './GooeyText';
+import MentorshipPersonalPathIcon from './MentorshipPersonalPathIcon';
+import MentorshipSupportIcon from './MentorshipSupportIcon';
+import MentorshipConferenceIcon from './MentorshipConferenceIcon';
+import MentorshipFlexibleIcon from './MentorshipFlexibleIcon';
 import type { UiLocale } from '../constants';
+import { useDialogFocusTrap } from '../hooks/useDialogFocusTrap';
 
 type MentorshipCopy = {
   back: string;
@@ -26,20 +31,22 @@ type MentorshipCopy = {
   ctaNote: string;
 };
 
-type FeatureIcon = {
-  step: string;
-  CustomIcon: React.ComponentType<{ className?: string }>;
-};
-
 interface MentorshipViewProps {
   copy: MentorshipCopy;
-  features: FeatureIcon[];
   locale: UiLocale;
   isRu: boolean;
   onLocaleChange: (l: UiLocale) => void;
   onClose: () => void;
   telegramUrl: string;
+  reducedMotion: boolean;
 }
+
+const FEATURE_ICONS = [
+  { step: '01', CustomIcon: MentorshipPersonalPathIcon },
+  { step: '02', CustomIcon: MentorshipSupportIcon },
+  { step: '03', CustomIcon: MentorshipConferenceIcon },
+  { step: '04', CustomIcon: MentorshipFlexibleIcon },
+] as const;
 
 // Per-pillar accent palette — palette mirrors the reference (violet,
 // emerald, cyan, pink). Each entry exposes:
@@ -104,15 +111,16 @@ const TitleLetters: React.FC<{ text: string; uniqueKey: string }> = ({ text, uni
 
 const MentorshipView: React.FC<MentorshipViewProps> = ({
   copy,
-  features,
   locale,
   isRu,
   onLocaleChange,
   onClose,
   telegramUrl,
+  reducedMotion,
 }) => {
   const overlayRef = useRef<HTMLDivElement>(null);
   const pillarsRef = useRef<HTMLElement>(null);
+  useDialogFocusTrap(overlayRef);
 
   // Generic reveal-on-scroll for elements with .reveal-rise class
   useEffect(() => {
@@ -213,11 +221,16 @@ const MentorshipView: React.FC<MentorshipViewProps> = ({
   return (
     <div
       ref={overlayRef}
-      className="fixed inset-0 z-[200] isolate overflow-y-auto font-['Outfit',sans-serif]"
+      className="fixed inset-0 z-[200] isolate overflow-y-auto pb-20 font-['Outfit',sans-serif] outline-none md:pb-0"
       lang={locale === 'ru' ? 'ru' : 'en'}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="mentorship-view-title"
+      tabIndex={-1}
+      data-portfolio-view="mentorship"
     >
       <div className="pointer-events-none fixed inset-0 overflow-hidden z-0" aria-hidden>
-        <InfiniteGridBackground accent="red" />
+        <InfiniteGridBackground accent="red" reducedMotion={reducedMotion} />
       </div>
       <div
         className="pointer-events-none fixed inset-0 z-[1] bg-gradient-to-b from-black/55 via-black/30 to-black/60"
@@ -231,7 +244,7 @@ const MentorshipView: React.FC<MentorshipViewProps> = ({
         <button
           type="button"
           onClick={onClose}
-          className="group inline-flex items-center gap-2 md:gap-3 rounded-full border border-white/12 bg-black/55 px-3 md:px-4 py-2 text-white/65 hover:text-white hover:border-white/30 transition-all backdrop-blur-md pointer-events-auto"
+          className="group pointer-events-auto inline-flex min-h-11 items-center gap-2 rounded-full border border-white/12 bg-black/55 px-3 py-2 text-white/65 backdrop-blur-md transition-colors active:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 md:gap-3 md:px-4 md:hover:border-white/30 md:hover:text-white"
         >
           <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform md:w-4 md:h-4" />
           <span className="font-mono text-[8px] md:text-[10px] tracking-widest">{copy.back}</span>
@@ -245,7 +258,7 @@ const MentorshipView: React.FC<MentorshipViewProps> = ({
           <button
             type="button"
             onClick={() => onLocaleChange('en')}
-            className={`rounded-full px-3 py-1.5 transition-colors ${
+            className={`min-h-10 rounded-full px-3 py-1.5 transition-colors ${
               locale === 'en' ? 'bg-white/15 text-white' : 'text-white/45 hover:text-white/85'
             }`}
           >
@@ -254,7 +267,7 @@ const MentorshipView: React.FC<MentorshipViewProps> = ({
           <button
             type="button"
             onClick={() => onLocaleChange('ru')}
-            className={`rounded-full px-3 py-1.5 transition-colors ${
+            className={`min-h-10 rounded-full px-3 py-1.5 transition-colors ${
               locale === 'ru' ? 'bg-white/15 text-white' : 'text-white/45 hover:text-white/85'
             }`}
           >
@@ -268,12 +281,12 @@ const MentorshipView: React.FC<MentorshipViewProps> = ({
         <div className="w-full max-w-4xl text-center">
           {/* Title — gooey morphing through related concepts; rises into view */}
           <h1
+            id="mentorship-view-title"
             className="mb-5 md:mb-7 reveal-rise"
             aria-label={copy.title}
             style={{ transitionDelay: '220ms' }}
           >
             <GooeyText
-              key={locale}
               texts={
                 isRu
                   ? ['Менторство', 'Обучение', 'Практика', 'Результат']
@@ -411,7 +424,7 @@ const MentorshipView: React.FC<MentorshipViewProps> = ({
           </div>
 
           {/* 4 pillar tiles — each with a themed chrome ornament */}
-          {features.map((feat, idx) => {
+          {FEATURE_ICONS.map((feat, idx) => {
             const accent = PILLAR_ACCENTS[idx % PILLAR_ACCENTS.length];
             const data = copy.features[idx] || { title: '', desc: '' };
             return (
@@ -617,6 +630,8 @@ const GlassCard: React.FC<GlassCardProps> = ({
         src={bgImage}
         alt=""
         aria-hidden
+        loading="lazy"
+        decoding="async"
         className={`pointer-events-none select-none absolute right-0 top-1/2 -translate-y-1/2 h-[110%] w-auto object-contain object-right ${
           isHero ? 'max-w-[42%]' : 'max-w-[55%]'
         }`}
@@ -635,56 +650,13 @@ const GlassCard: React.FC<GlassCardProps> = ({
       </span>
     )}
 
-    {/* Top row: status pill · dots · info button.
-        The status pill REPLACES the old colored icon tile — it's a
-        glass-styled accent-colored chip with a pulsing dot inside.
-        Hero shows "PRO", the four pillars show their step number. */}
-    <div className="relative flex items-start justify-between gap-3">
-      {/* Status pill */}
-      <div
-        className="relative inline-flex items-center gap-2 rounded-full px-2.5 md:px-3 py-1 md:py-1.5 shrink-0"
-        style={{
-          background: `linear-gradient(135deg, ${accent.tint} 0%, rgba(255,255,255,0.04) 100%)`,
-          border: `1px solid ${accent.border}`,
-          boxShadow: [
-            'inset 0 1px 0 0 rgba(255,255,255,0.3)',
-            `0 0 16px ${accent.glow}`,
-          ].join(', '),
-        }}
-      >
-        {/* Pulse dot — animated halo + solid core, accent color */}
-        <span className="relative flex h-1.5 w-1.5 md:h-2 md:w-2" aria-hidden>
-          <span
-            className="absolute inline-flex h-full w-full rounded-full opacity-80 animate-ping"
-            style={{ background: accent.hex }}
-          />
-          <span
-            className="relative inline-flex h-1.5 w-1.5 md:h-2 md:w-2 rounded-full"
-            style={{ background: accent.hex, boxShadow: `0 0 8px ${accent.hex}` }}
-          />
-        </span>
-        {/* Label */}
-        <span
-          className="font-mono text-[9px] md:text-[10px] tracking-[0.22em] uppercase font-semibold leading-none"
-          style={{ color: accent.hex, textShadow: `0 0 10px ${accent.glow}` }}
-        >
-          {isHero ? 'PRO' : step}
-        </span>
-      </div>
-
-      {/* Decorative dots — three small dots in a row near the top center */}
-      <div className="flex items-center gap-1 mt-3" aria-hidden>
-        <span className="h-[3px] w-[3px] rounded-full bg-white/40" />
-        <span className="h-[3px] w-[3px] rounded-full bg-white/40" />
-        <span className="h-[3px] w-[3px] rounded-full bg-white/40" />
-      </div>
-
-      {/* Info pill */}
+    <div className="relative flex items-center justify-between gap-3">
+      <span aria-hidden><Icon className="h-6 w-6 md:h-7 md:w-7" /></span>
       <span
-        aria-hidden
-        className="flex items-center justify-center w-6 h-6 md:w-7 md:h-7 rounded-full border border-white/25 bg-white/[0.06] text-white/70 shrink-0"
+        className="font-mono text-[9px] font-semibold uppercase tracking-[0.22em] md:text-[10px]"
+        style={{ color: accent.hex, textShadow: `0 0 10px ${accent.glow}` }}
       >
-        <span className="font-serif italic text-[11px] md:text-[12px] leading-none translate-y-[-0.5px]">i</span>
+        {isHero ? 'FEATURED' : step}
       </span>
     </div>
 
@@ -699,17 +671,8 @@ const GlassCard: React.FC<GlassCardProps> = ({
         {title}
       </h3>
       <div className="flex items-center justify-between">
-        <span className="inline-flex items-center gap-1.5 font-bold text-[10px] md:text-[11px] tracking-[0.22em] uppercase text-white">
-          <svg width="9" height="9" viewBox="0 0 8 8" fill="currentColor" aria-hidden>
-            <path d="M1 0v8l7-4z" />
-          </svg>
+        <span className="font-bold text-[10px] md:text-[11px] tracking-[0.22em] uppercase text-white">
           {tagLabel ?? `${isRu ? 'ШАГ' : 'STEP'} ${step}`}
-        </span>
-        <span
-          aria-hidden
-          className="inline-flex items-center justify-center text-[11px] md:text-[12px] text-white/55 group-hover:text-white/85 transition-colors"
-        >
-          →
         </span>
       </div>
     </div>

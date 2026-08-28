@@ -23,7 +23,7 @@ const SelectedWork: React.FC<SelectedWorkProps> = ({ watermark, subtitle, lead, 
       </h2>
 
       <div className="relative z-10 flex flex-col items-center mb-6 md:mb-9">
-        <p className="text-white font-mono text-[11px] md:text-[16px] uppercase tracking-[0.8em] font-black mb-3 drop-shadow-[0_0_15px_rgba(255,255,255,0.5)] text-center">
+        <p className="mb-3 px-2 text-center font-mono text-[10px] font-black uppercase tracking-[0.28em] text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.5)] sm:tracking-[0.5em] md:text-[16px] md:tracking-[0.8em]">
           {subtitle}
         </p>
         <div className="h-px w-32 bg-gradient-to-r from-cyan-300 via-violet-300 to-yellow-300 md:w-56" />
