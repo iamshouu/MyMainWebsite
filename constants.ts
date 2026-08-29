@@ -44,8 +44,8 @@ export type DevelopmentProjectCopy = {
   title: string;
   description: string;
   meta: string;
-  cta: string;
-  url: string;
+  cta?: string;
+  url?: string;
 };
 
 export const MAIN_SITE_COPY: Record<
@@ -123,8 +123,6 @@ export const MAIN_SITE_COPY: Record<
         title: 'shou / personal site',
         description: 'The site you are viewing: an interactive portfolio that combines market experience, product work and motion-led frontend development.',
         meta: 'React · TypeScript · Motion',
-        cta: 'View source',
-        url: 'https://github.com/iamshouu/MyMainWebsite',
       },
     ],
     roadmapWatermark: 'Plans',
@@ -209,8 +207,6 @@ export const MAIN_SITE_COPY: Record<
         title: 'shou / personal site',
         description: 'Сайт, который ты сейчас смотришь: интерактивное портфолио, объединяющее рынок, продуктовую работу и frontend-разработку с анимацией.',
         meta: 'React · TypeScript · Motion',
-        cta: 'Посмотреть код',
-        url: 'https://github.com/iamshouu/MyMainWebsite',
       },
     ],
     roadmapWatermark: 'Планы',

@@ -78,7 +78,7 @@ const ProjectsView: React.FC<ProjectsViewProps> = ({ copy, onClose, reducedMotio
               ))}
             </ul>
             <a
-              href="https://xperienceone.ru"
+              href="https://xperienceone.space"
               target="_blank"
               rel="noopener noreferrer"
               className="mt-10 inline-flex items-center gap-2 px-7 py-4 bg-white text-black rounded-2xl text-[11px] md:text-[12px] font-bold uppercase tracking-widest hover:bg-white/90 transition-[background-color,transform] hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"

@@ -67,19 +67,21 @@ const SelectedWork: React.FC<SelectedWorkProps> = ({ watermark, subtitle, lead, 
                     <p className="font-mono text-[9px] uppercase tracking-[0.2em] text-white/[0.32] md:text-[10px]">
                       {project.meta}
                     </p>
-                    <a
-                      href={project.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="group/link inline-flex items-center gap-2 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-white/65 transition-colors duration-300 hover:text-white focus-visible:outline-none focus-visible:text-white"
-                    >
-                      {project.cta}
-                      <ArrowUpRight
-                        size={15}
-                        className="transition-transform duration-300 group-hover/link:translate-x-1 group-hover/link:-translate-y-1"
-                        style={{ color: accent }}
-                      />
-                    </a>
+                    {project.url && project.cta && (
+                      <a
+                        href={project.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="group/link inline-flex items-center gap-2 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-white/65 transition-colors duration-300 hover:text-white focus-visible:outline-none focus-visible:text-white"
+                      >
+                        {project.cta}
+                        <ArrowUpRight
+                          size={15}
+                          className="transition-transform duration-300 group-hover/link:translate-x-1 group-hover/link:-translate-y-1"
+                          style={{ color: accent }}
+                        />
+                      </a>
+                    )}
                   </div>
                 </div>
               </article>
